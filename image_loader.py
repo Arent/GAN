@@ -17,8 +17,8 @@ def image_locations_and_labels_from_files(image_locations_filename, image_labels
 
 def get_batches():
 	all_filepaths, all_labels = image_locations_and_labels_from_files(path_folder,label_folder)
-	all_filepaths = all_filepaths
-	all_labels = all_labels
+	all_filepaths = all_filepaths[0:99]
+	all_labels = all_labels[0:99]
 
 
 	# convert string into tensors
@@ -37,10 +37,12 @@ def get_batches():
 	# create input queues
 	train_input_queue = tf.train.slice_input_producer(
 										[train_images, train_labels],
-										shuffle=True)
+										shuffle=True,
+										num_epochs = EPOCHS)
 	test_input_queue = tf.train.slice_input_producer(
 										[test_images, test_labels],
-										shuffle=True)
+										shuffle=True,
+										num_epochs= EPOCHS)
 
 	# process path and string tensor into an image and a label
 	file_content = tf.read_file(train_input_queue[0])
@@ -64,12 +66,12 @@ def get_batches():
 	train_image_batch, train_label_batch = tf.train.batch(
 										[train_image, train_label],
 										batch_size=BATCH_SIZE
-										#,num_threads=1
+										,num_threads=1
 										)
 	test_image_batch, test_label_batch = tf.train.batch(
 										[test_image, test_label],
 										batch_size=BATCH_SIZE
-										#,num_threads=1
+										,num_threads=1
 										)
 	return train_image_batch, train_label_batch, test_image_batch, test_label_batch
 

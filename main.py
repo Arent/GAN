@@ -17,19 +17,19 @@ with tf.Session() as sess:
   # initialize the queue threads to start to shovel data
 	coord = tf.train.Coordinator()
 	threads = tf.train.start_queue_runners(coord=coord)
-
-	print "from the train set:"
-	for i in range(3):
-		image_batch  = sess.run(train_image_batch)
-		for img in image_batch:
-			Image.fromarray(np.uint8(np.asarray(img))).show()
-
-
-	print "from the test set:"
-	for i in range(3):
-		sess.run(test_image_batch)
-
-  # stop our queue threads and properly close the session
-	coord.request_stop()
-	coord.join(threads)
-	sess.close()
+	iBatch = 0
+	try:
+		while not coord.should_stop():
+			print(iBatch)
+			image_batch  = sess.run(train_image_batch)
+			iBatch = iBatch + 1
+	
+	except Exception, e:
+	# Report exceptions to the coordinator.
+		coord.request_stop(e)
+	
+	finally:
+  		# stop our queue threads and properly close the session
+		coord.request_stop()
+		coord.join(threads)
+		sess.close()

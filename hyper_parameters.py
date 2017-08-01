@@ -8,4 +8,4 @@ NUM_CHANNELS  = 3
 'parameters regarding training'
 test_set_size = 5
 BATCH_SIZE    = 5
-EPOCHS = 4
+EPOCHS = 3
