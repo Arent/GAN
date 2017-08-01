@@ -2,6 +2,8 @@ import glob
 from tqdm import tqdm
 import Image
 import tensorflow as tf
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import dtypes
 import numpy as np
 
 def image_locations_and_labels_from_files(image_locations_filename, image_labels_filename):
@@ -13,12 +15,20 @@ def image_locations_and_labels_from_files(image_locations_filename, image_labels
 	return image_locations, image_labels
 
 image_locations, image_labels = image_locations_and_labels_from_files('data/image_locations','data/image_labels')
+# convert string into tensors
+tf_image_locations = ops.convert_to_tensor(image_locations, dtype=dtypes.string)
+tf_image_labels = ops.convert_to_tensor(image_labels, dtype=dtypes.string)
+
 
 image_locations_queue = tf.train.string_input_producer(image_locations)
 
-# Define a subgraph that takes a filename, reads the file, decodes it, and                                                                                     
+
+
+
+#Define a subgraph that takes a filename, reads the file, decodes it, and                                                                                     
 # enqueues it.                                                                                                                                                 
 filename = image_locations_queue.dequeue()
+label = image_locations_queue.dequeue()
 image_bytes = tf.read_file(filename)
 decoded_image = tf.image.decode_jpeg(image_bytes)
 image_queue = tf.FIFOQueue(128, [tf.uint8], None)
@@ -48,6 +58,7 @@ with tf.Session() as sess:
 	for i in tqdm(range(3)):
 		image = img.eval()
 		print(image.shape)
+		print image
   		Image.fromarray(np.asarray(image)).show()
 
 		
