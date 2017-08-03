@@ -45,25 +45,25 @@ def generator(z):
 			generator_activated_layer_1 = transposed_convolution_relu_normalisation(\
 				input_dim=[1,1,100],output_dim=[4,4,1024], 
 				strides=[1,1,1,1], padding='SAME', input=z,
-				normalise=True, activation=leaky_RELU)
+				normalise=True, activation=tf.nn.relu)
 
 		with tf.variable_scope("layer2"):
 			generator_activated_layer_2 = transposed_convolution_relu_normalisation(\
 				input_dim=[4,4,1024],output_dim=[8,8,512], 
 				strides=[1,2,2,1], padding='SAME', input=generator_activated_layer_1,
-				normalise=True, activation=leaky_RELU)
+				normalise=True, activation=tf.nn.relu)
 
 		with tf.variable_scope("layer3"):
 			generator_activated_layer_3 = transposed_convolution_relu_normalisation(\
 				input_dim=[8,8,512],output_dim=[16,16,256], 
 				strides=[1,2,2,1], padding='SAME', input=generator_activated_layer_2,
-				normalise=True, activation=leaky_RELU)
+				normalise=True, activation=tf.nn.relu)
 
 		with tf.variable_scope("layer4"):
 			generator_activated_layer_4 = transposed_convolution_relu_normalisation(\
 				input_dim=[16,16,256],output_dim=[32,32,128], 
 				strides=[1,2,2,1], padding='SAME', input=generator_activated_layer_3,
-				normalise=True, activation=leaky_RELU)
+				normalise=True, activation=)
 
 
 		with tf.variable_scope("layer5"):

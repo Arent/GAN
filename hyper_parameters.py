@@ -14,4 +14,5 @@ relu_alpha = 1/6
 
 'parameters regarding convolutions'
 z_dimension = 100
-
+KERNEL_WIDTH = 4
+KERNEL_HEIGHT = 4
