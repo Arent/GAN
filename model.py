@@ -1,76 +1,202 @@
 import tensorflow as tf 
 from hyper_parameters import * 
 
-#generator
-# 100 x 1 -> 4x4 X 1024 
+
 def leaky_RELU(x):
 	return tf.maximum(x, relu_alpha * x)
 
-def transposed_convolution_relu_normalisation(input_dim, output_dim, strides, padding, input, normalise=True, activation):
+def init_weight_variable(shape): #init_weight_variable generates a weight variable of a given shape.
+	return tf.random_normal(shape, stddev=0.01)
+
+def binary_cross_entropy(x , label):
+    x = tf.clip_by_value(x, 1e-7, 1. - 1e-7) #for stability
+    return -(label * tf.log(x) + (1.- label)*tf.log(1. - x))
+
+
+
+
+def activate_convolution_transposed(input_dim, output_dim, strides, padding, input, normalise=True, activation):
 	assert input_dim[1] < output_dim[1] 
 	assert input_dim[2] < output_dim[2] 
 	assert len(input_dim) == 3
 	assert len(output_dim) == 3
 
 	filter_shape = [output_dim[0], output_dim[1], output_dim[2], input_dim[2]]
-	filter_weights = tf.get_variable("weights", filter_shape)
+	filter_weights = tf.get_variable("weights", initializer=init_weight_variable(filter_shape))
 
 	batch_size = tf.shape(input)[0] 
 	output_shape = [batch_size,output_dim[0],output_dim[1],output_dim[2]]
 
-	unactivated_output = tf.nn.conv2d_transpose(
-    value=input,
-    filter=filter_weights,
-    output_shape=output_shape,
-    strides=strides,
-    padding=padding,
+	output = tf.nn.conv2d_transpose(
+					value=input,
+					filter=filter_weights,
+					output_shape=output_shape,
+					strides=strides,
+					padding=padding,
 )
-	bias = tf.get_variable("bias", output_dim)
- 	unactivated_output_bias = unactivated_output + bias
+	bias = tf.get_variable("bias", initializer=init_weight_variable(output_dim))
+	output_bias = output + bias
 
- 	if normalise:
-    	unactivated_output_bias = tf.contrib.layers.batch_norm(unactivated_output_bias, 
-    									center=True, 
-    									scale=True, 
-    									decay=normalisation_decay)
+	if normalise:
+		output_bias = tf.contrib.layers.batch_norm(output_bias, 
+													center=True, 
+													scale=True, 
+													decay=normalisation_decay)
 
-
- 	activated_output_bias= activation(unactivated_output_bias)
-
+	activated_output_bias= activation(output_bias)
 	return activated_output_bias
 
-def generator(z):
+def activate_convolution(filter_width, filter_height, input_dim, output_dim, strides, padding, input, normalise=True, activation):
+	assert len(input_dim) == 3
+	assert len(output_dim) == 3
+
+	filter_shape = [filter_height, filter_width, input_dim[2], output_dim[2]]
+	filter = tf.get_variable("weights", initializer=init_weight_variable(filter_shape))
+	bias = tf.get_variable("bias", initializer=init_weight_variable(output_dim))
+
+
+	output = conv2d(
+				input=input,
+				filter=filter,
+				strides=strides,
+				padding=padding)
+
+	output_bias = output + bias
+	if normalise:
+		output_bias = tf.contrib.layers.batch_norm(output_bias, 
+											center=True, 
+											scale=True, 
+											decay=normalisation_decay)
+	activated_output_bias= activation(output_bias)
+	return activated_output_bias
+
+def activate_fully_connected(input, input_dim, output_dim, activation, normalize):
+	weight_shape = [input_dim, output_dim]
+	weights = tf.get_variable(name="weights", initializer=init_weight_variable(weight_shape))
+	bias = tf.get_variable(name="bias", initializer=init_weight_variable(output_dim))
+
+	output = tf.matmul(input_var, weights)
+  
+	output_bias = output + bias
+	if normalize:
+		output_bias = tf.contrib.layers.batch_norm(output, 	
+											center=True, 
+											scale=True, 
+											decay=normalisation_decay)
+
+	output_bias_logit = fc_var_biased
+	activated_output_bias = activation(output_bias)
+	
+	return activated_output_bias, output_bias_logit
+
+def generate(z):
 	with tf.variable_scope("generator"):
 		with tf.variable_scope("layer1"):
-			generator_activated_layer_1 = transposed_convolution_relu_normalisation(\
-				input_dim=[1,1,100],output_dim=[4,4,1024], 
-				strides=[1,1,1,1], padding='SAME', input=z,
-				normalise=True, activation=tf.nn.relu)
+			activated_layer_1 = activate_convolution_transposed(\
+											input_dim=[1,1,100],output_dim=[4,4,1024], 
+											strides=[1,1,1,1], padding='SAME', input=z,
+											normalise=True, 
+											activation=tf.nn.relu)
 
 		with tf.variable_scope("layer2"):
-			generator_activated_layer_2 = transposed_convolution_relu_normalisation(\
-				input_dim=[4,4,1024],output_dim=[8,8,512], 
-				strides=[1,2,2,1], padding='SAME', input=generator_activated_layer_1,
-				normalise=True, activation=tf.nn.relu)
+			activated_layer_2 = activate_convolution_transposed(\
+											input_dim=[4,4,1024],output_dim=[8,8,512], 
+											strides=[1,2,2,1], padding='SAME', 
+											input=activated_layer_1,
+											normalise=True, 
+											activation=tf.nn.relu)
 
 		with tf.variable_scope("layer3"):
-			generator_activated_layer_3 = transposed_convolution_relu_normalisation(\
-				input_dim=[8,8,512],output_dim=[16,16,256], 
-				strides=[1,2,2,1], padding='SAME', input=generator_activated_layer_2,
-				normalise=True, activation=tf.nn.relu)
+			activated_layer_3 = activate_convolution_transposed(\
+											input_dim=[8,8,512],output_dim=[16,16,256], 
+											strides=[1,2,2,1], padding='SAME', 
+											input=activated_layer_2,
+											normalise=True, 
+											activation=tf.nn.relu)
 
 		with tf.variable_scope("layer4"):
-			generator_activated_layer_4 = transposed_convolution_relu_normalisation(\
-				input_dim=[16,16,256],output_dim=[32,32,128], 
-				strides=[1,2,2,1], padding='SAME', input=generator_activated_layer_3,
-				normalise=True, activation=)
+			activated_layer_4 = activate_convolution_transposed(\
+											input_dim=[16,16,256],output_dim=[32,32,128], 
+											strides=[1,2,2,1], padding='SAME', 
+											input=activated_layer_3,
+											normalise=True, 
+											activation=tf.nn.relu)
 
 
 		with tf.variable_scope("layer5"):
-			generator_activated_layer_5 = transposed_convolution_relu_normalisation(\
-				input_dim=[32,32,128],output_dim=[64,64,3], 
-				strides=[1,2,2,1], padding='SAME', input=generator_activated_layer_4,
-				normalise=True, activation=leaky_RELU)
+			activated_layer_5 = activate_convolution_transposed(\
+											input_dim=[32,32,128],output_dim=[64,64,3], 
+											strides=[1,2,2,1], padding='SAME', 
+											input=activated_layer_4,
+											normalise=True, 
+											activation=tf.nn.relu)
 
-		generated_image = generator_activated_layer_5			
-	return generated_image
+	fake_image = activated_layer_5			
+	return fake_image
+
+def discriminate(image):
+	with tf.variable_scope("discriminator"):
+		with tf.variable_scope("layer1"):
+			activated_layer_1 = activate_convolution(\
+											kernel_width=KERNEL_WIDTH, kernel_height=KERNEL_HEIGHT,
+											input_dim=[64, 64, 3], output_dim=[32, 32, 128], 
+											strides=[1,2,2,1], padding='SAME', 
+											input=image,
+											normalise=True, 
+											activation=leaky_RELU)
+		with tf.variable_scope("layer2"):
+			activated_layer_2 = activate_convolution(\
+											kernel_width=KERNEL_WIDTH, kernel_height=KERNEL_HEIGHT,
+											input_dim=[32, 32, 128], output_dim=[16, 16, 256], 
+											strides=[1,2,2,1], padding='SAME', 
+											input=activated_layer_1,
+											normalise=True, 
+											activation=leaky_RELU)
+		with tf.variable_scope("layer3"):
+			activated_layer_3 = activate_convolution(\
+											kernel_width=KERNEL_WIDTH, kernel_height=KERNEL_HEIGHT,
+											input_dim=[16, 16, 256], output_dim=[8, 8, 512], 
+											strides=[1,2,2,1], padding='SAME', 
+											input=activated_layer_2,
+											normalise=True, 
+											activation=leaky_RELU)
+		with tf.variable_scope("layer4"):
+			activated_layer_4 = activate_convolution(\
+											kernel_width=KERNEL_WIDTH, kernel_height=KERNEL_HEIGHT,
+											input_dim=[8, 8, 512], output_dim=[4, 4, 1024], 
+											strides=[1,2,2,1], padding='SAME', 
+											input=activated_layer_3,
+											normalise=True, 
+											activation=leaky_RELU)
+		with tf.variable_scope("layer5"):
+			activated_layer_4_flattened = tf.reshape(activated_layer_4, [batch_size, -1])
+			batch_size = tf.shape(image)[0] 
+			judgement, logit_judgement = activate_fully_connected(
+											input=activated_layer_4_flattened,
+											input_dim=4*4*1024, 
+											output_dim=1,
+											activation=tf.nn.tanh, 
+											normalize=True)
+	return judgement, logit_judgement
+
+	def model():
+		Z = tf.Placeholder(dtype=tf.float32, shape=(None, z_dimension))
+		fake_images = generate(Z)
+		real_images = tf.placeholder(	dtype=tf.float32, 
+										shape=(None,IMAGE_HEIGHT,IMAGE_WIDTH,NUM_CHANNELS))
+
+		probability_real, logit_real = discriminate(real_images)
+		scope.reuse_variables() #ensure that the 'discriminate' function doesnt create new variables 
+		probability_fake, logit_fake = discriminate(fake_images)
+
+		loss_discriminator_real = binary_cross_entropy(	x=probability_real, 
+														label=tf.ones_like(probability_real))
+		loss_discriminator_fake = binary_cross_entropy(	x=probability_fake, 
+														label=tf.zeros_like(probability_real))
+		loss_discriminator 	= tf.reduce_mean(loss_discriminator_real) \
+							+ tf.reduce_mean(loss_discriminator_fake)
+		loss_generator = tf.reduce_mean(binary_cross_entropy(	x=probability_fake,
+																label=tf.ones_like(probability_fake)))
+		return Z, real_images, probability_real, logit_real, probability_fake, logit_fake, 
+				loss_discriminator_real, loss_discriminator_fake, loss_discriminator ,loss_generator 
+
