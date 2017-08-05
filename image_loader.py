@@ -47,13 +47,16 @@ def get_batches():
 	# process path and string tensor into an image and a label
 	file_content = tf.read_file(train_input_queue[0])
 	train_image = tf.image.decode_jpeg(file_content, channels=NUM_CHANNELS)
-	train_image = tf.image.resize_images(train_image,[IMAGE_HEIGHT,IMAGE_WIDTH])
 
+	# pre processing, image dimensions and range
+	train_image = tf.image.resize_images(train_image,[IMAGE_HEIGHT,IMAGE_WIDTH])
+	train_image = ((train_image /255) -1) * 2 # rescale to -1 , 1
 	train_label = train_input_queue[1]
 
 	file_content = tf.read_file(test_input_queue[0])
 	test_image = tf.image.decode_jpeg(file_content, channels=NUM_CHANNELS)
 	test_image = tf.image.resize_images(test_image,[IMAGE_HEIGHT,IMAGE_WIDTH])
+	test_image = ((test_image /255) -1) * 2 # rescale to -1 , 1
 
 	test_label = test_input_queue[1]
 

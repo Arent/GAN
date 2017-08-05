@@ -20,9 +20,9 @@ with tf.Session() as sess:
 	generator_variables=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='generator')
 
 	train_op_discrim = tf.train.AdamOptimizer(learning_rate, beta1=BETA_ADAM)/
-							.minimize(loss_discriminator, var_list=discriminator_variables)
+							.minimize(loss_discriminator, var_list=discriminator_variables, name='D_step')
 	train_op_gen = tf.train.AdamOptimizer(learning_rate, beta1=BETA_ADAM)/
-							.minimize(loss_generator, var_list=generator_variables)
+							.minimize(loss_generator, var_list=generator_variables, name='G_step')
 
 
 
@@ -38,8 +38,10 @@ with tf.Session() as sess:
 		while not coord.should_stop():
 			print(iBatch)
 			z_batch = np.random.uniform(-1, 1, size=[BATCH_SIZE, z_dimension]).astype(np.float32)
-			loss_generator_local = sess.run()
 			image_batch  = sess.run(train_image_batch)
+
+			_, loss_generator_local = sess.run(train_op_gen, loss_generator, feed_dict={real_images=image_batch})
+			_, loss_discriminator_local = sess.run(train_op_discrim, loss_discriminator, feed_dict={Z=z_batch})
 
 			iBatch = iBatch + 1
 	
