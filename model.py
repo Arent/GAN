@@ -197,6 +197,6 @@ def discriminate(image):
 							+ tf.reduce_mean(loss_discriminator_fake)
 		loss_generator = tf.reduce_mean(binary_cross_entropy(	x=probability_fake,
 																label=tf.ones_like(probability_fake)))
-		return Z, real_images, probability_real, logit_real, probability_fake, logit_fake, 
+		return Z, real_images, probability_real, logit_real, probability_fake, logit_fake,\
 				loss_discriminator_real, loss_discriminator_fake, loss_discriminator ,loss_generator 
 
