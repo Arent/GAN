@@ -15,7 +15,7 @@ def binary_cross_entropy(x , label):
 
 
 
-def activate_convolution_transposed(input_dim, output_dim, strides, padding, input, normalise=True, activation):
+def activate_convolution_transposed(input_dim, output_dim, strides, padding, input, activation , normalise=True):
 	assert input_dim[1] < output_dim[1] 
 	assert input_dim[2] < output_dim[2] 
 	assert len(input_dim) == 3
@@ -46,7 +46,7 @@ def activate_convolution_transposed(input_dim, output_dim, strides, padding, inp
 	activated_output_bias= activation(output_bias)
 	return activated_output_bias
 
-def activate_convolution(filter_width, filter_height, input_dim, output_dim, strides, padding, input, normalise=True, activation):
+def activate_convolution(filter_width, filter_height, input_dim, output_dim, strides, padding, input, activation, normalise=True):
 	assert len(input_dim) == 3
 	assert len(output_dim) == 3
 
@@ -70,7 +70,7 @@ def activate_convolution(filter_width, filter_height, input_dim, output_dim, str
 	activated_output_bias= activation(output_bias)
 	return activated_output_bias
 
-def activate_fully_connected(input, input_dim, output_dim, activation, normalize):
+def activate_fully_connected(input, input_dim, output_dim, activation, normalize=True):
 	weight_shape = [input_dim, output_dim]
 	weights = tf.get_variable(name="weights", initializer=init_weight_variable(weight_shape))
 	bias = tf.get_variable(name="bias", initializer=init_weight_variable(output_dim))
@@ -95,32 +95,33 @@ def generate(z):
 			activated_layer_1 = activate_convolution_transposed(\
 											input_dim=[1,1,100],output_dim=[4,4,1024], 
 											strides=[1,1,1,1], padding='SAME', input=z,
-											normalise=True, 
-											activation=tf.nn.relu)
+											activation=tf.nn.relu,
+											normalise=True) 
 
 		with tf.variable_scope("layer2"):
 			activated_layer_2 = activate_convolution_transposed(\
 											input_dim=[4,4,1024],output_dim=[8,8,512], 
 											strides=[1,2,2,1], padding='SAME', 
 											input=activated_layer_1,
-											normalise=True, 
-											activation=tf.nn.relu)
+											activation=tf.nn.relu,
+											normalise=True)
 
 		with tf.variable_scope("layer3"):
 			activated_layer_3 = activate_convolution_transposed(\
 											input_dim=[8,8,512],output_dim=[16,16,256], 
 											strides=[1,2,2,1], padding='SAME', 
 											input=activated_layer_2,
-											normalise=True, 
-											activation=tf.nn.relu)
+											activation=tf.nn.relu,
+											normalise=True)
 
 		with tf.variable_scope("layer4"):
 			activated_layer_4 = activate_convolution_transposed(\
 											input_dim=[16,16,256],output_dim=[32,32,128], 
 											strides=[1,2,2,1], padding='SAME', 
 											input=activated_layer_3,
-											normalise=True, 
-											activation=tf.nn.relu)
+											activation=tf.nn.relu,
+											normalise=True)
+
 
 
 		with tf.variable_scope("layer5"):
@@ -128,8 +129,8 @@ def generate(z):
 											input_dim=[32,32,128],output_dim=[64,64,3], 
 											strides=[1,2,2,1], padding='SAME', 
 											input=activated_layer_4,
-											normalise=True, 
-											activation=tf.nn.relu)
+											activation=tf.nn.relu,
+											normalise=True)
 
 	fake_image = activated_layer_5			
 	return fake_image
@@ -142,32 +143,36 @@ def discriminate(image):
 											input_dim=[64, 64, 3], output_dim=[32, 32, 128], 
 											strides=[1,2,2,1], padding='SAME', 
 											input=image,
-											normalise=True, 
-											activation=leaky_RELU)
+											activation=leaky_RELU,
+											normalise=True) 
+
 		with tf.variable_scope("layer2"):
 			activated_layer_2 = activate_convolution(\
 											kernel_width=KERNEL_WIDTH, kernel_height=KERNEL_HEIGHT,
 											input_dim=[32, 32, 128], output_dim=[16, 16, 256], 
 											strides=[1,2,2,1], padding='SAME', 
 											input=activated_layer_1,
-											normalise=True, 
-											activation=leaky_RELU)
+											activation=leaky_RELU,
+											normalise=True)
+
 		with tf.variable_scope("layer3"):
 			activated_layer_3 = activate_convolution(\
 											kernel_width=KERNEL_WIDTH, kernel_height=KERNEL_HEIGHT,
 											input_dim=[16, 16, 256], output_dim=[8, 8, 512], 
 											strides=[1,2,2,1], padding='SAME', 
 											input=activated_layer_2,
-											normalise=True, 
-											activation=leaky_RELU)
+											activation=leaky_RELU,
+											normalise=True) 
+
 		with tf.variable_scope("layer4"):
 			activated_layer_4 = activate_convolution(\
 											kernel_width=KERNEL_WIDTH, kernel_height=KERNEL_HEIGHT,
 											input_dim=[8, 8, 512], output_dim=[4, 4, 1024], 
 											strides=[1,2,2,1], padding='SAME', 
 											input=activated_layer_3,
-											normalise=True, 
-											activation=leaky_RELU)
+											activation=leaky_RELU,
+											normalise=True) 
+
 		with tf.variable_scope("layer5"):
 			activated_layer_4_flattened = tf.reshape(activated_layer_4, [batch_size, -1])
 			batch_size = tf.shape(image)[0] 
@@ -175,8 +180,9 @@ def discriminate(image):
 											input=activated_layer_4_flattened,
 											input_dim=4*4*1024, 
 											output_dim=1,
-											activation=tf.nn.tanh, 
-											normalize=True)
+											normalize=True,
+											activation=tf.nn.tanh) 
+
 	return judgement, logit_judgement
 
 	def model():
