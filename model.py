@@ -1,5 +1,6 @@
 import tensorflow as tf 
 from hyper_parameters import * 
+import tensorboard
 
 
 def leaky_RELU(x):
@@ -9,8 +10,8 @@ def init_weight_variable(shape): #init_weight_variable generates a weight variab
 	return tf.random_normal(shape, stddev=0.01)
 
 def binary_cross_entropy(x , label):
-    x = tf.clip_by_value(x, 1e-7, 1. - 1e-7) #for stability
-    return -(label * tf.log(x) + (1.- label)*tf.log(1. - x))
+	x = tf.clip_by_value(x, 1e-7, 1. - 1e-7) #for stability
+	return -(label * tf.log(x) + (1.- label)*tf.log(1. - x))
 
 
 
@@ -196,15 +197,26 @@ def build_model():
 		probability_real, logit_real = discriminate(real_images)
 		scope.reuse_variables() #Ensure the discriminate functions doesn't create new variables
 		probability_fake, logit_fake = discriminate(fake_images)
-
+		# with tf.name_scope("loss_functions") as loss:
 		loss_discriminator_real = binary_cross_entropy(	x=probability_real, 
 														label=tf.ones_like(probability_real))
+		tf.variable_summaries("discriminator_real", loss_discriminator_real)
+
 		loss_discriminator_fake = binary_cross_entropy(	x=probability_fake, 
 														label=tf.zeros_like(probability_real))
+		tf.variable_summaries("discriminator_fake", loss_discriminator_fake)
 		loss_discriminator 	= tf.reduce_mean(loss_discriminator_real) \
 							+ tf.reduce_mean(loss_discriminator_fake)
+		tf.variable_summaries("discriminator", loss_discriminator)
 		loss_generator = tf.reduce_mean(binary_cross_entropy(	x=probability_fake,
 															label=tf.ones_like(probability_fake)))
+		tf.variable_summaries("generator", loss_generator)
+
+			# Merge all tensorboard summaries
+		merged_summary_op = tf.summary.merge_all()
+		merged_summary_op = tf.identity(merged_summary_op, name="merged_summaries")
+
 	return Z, real_images, probability_real, logit_real, probability_fake, logit_fake,\
-			loss_discriminator_real, loss_discriminator_fake, loss_discriminator ,loss_generator 
+			loss_discriminator_real, loss_discriminator_fake, loss_discriminator ,loss_generator, merged_summary_op
+
 
