@@ -19,9 +19,7 @@ def activate_convolution_transposed(input_dim, output_dim, strides, padding, inp
 	assert len(input_dim) == 3
 	assert len(output_dim) == 3
 
-	print(input.get_shape())
 	filter_shape = [output_dim[0], output_dim[1], output_dim[2], input_dim[2]]
-	print('filter shape' + str(filter_shape))
 	filter_weights = tf.get_variable("weights", initializer=init_weight_variable(filter_shape))
 
 	batch_size = tf.shape(input)[0] 
@@ -135,7 +133,6 @@ def generate(z):
 											normalise=True)
 
 	fake_image = activated_layer_5			
-	print('fake image dimensions: ' + str(fake_image.get_shape()))
 	return fake_image
 
 def discriminate(image):
@@ -178,10 +175,8 @@ def discriminate(image):
 											normalise=True) 
 
 		with tf.variable_scope("layer5"):
-			print('activated_layer_4 shape' + str(activated_layer_4.get_shape()))
 			total_dimension =  tf.reduce_prod(tf.shape(activated_layer_4)[1:])
 			activated_layer_4_flattened = tf.reshape(activated_layer_4, [batch_size,  total_dimension])#4*4*1024])#
-			print('activated_layer_4_flattened shape' + str(activated_layer_4_flattened.get_shape()))
 			judgement, logit_judgement = activate_fully_connected(
 											input=activated_layer_4_flattened,
 											input_dim=4*4*1024, 

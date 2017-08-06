@@ -15,6 +15,7 @@ def image_locations_and_labels_from_files(image_locations_filename, image_labels
 	return image_locations, image_labels
  
 
+
 def get_batches():
 	all_filepaths, all_labels = image_locations_and_labels_from_files(PATH_FOLDER,LABEL_FOLDER)
 	all_filepaths = all_filepaths[0:99] #DEBUG
@@ -28,11 +29,16 @@ def get_batches():
 	# create a partition vector
 	partitions = [0] * len(all_filepaths)
 	partitions[:TEST_SET_SIZE] = [1] * TEST_SET_SIZE
+
 	random.shuffle(partitions)
 
 	# partition our data into a test and train set according to our partition vector
 	train_images, test_images = tf.dynamic_partition(all_images, partitions, 2)
 	train_labels, test_labels = tf.dynamic_partition(all_labels, partitions, 2)
+
+	number_of_train_files = len(partitions) - TEST_SET_SIZE
+	number_of_test_files = TEST_SET_SIZE
+
 
 	# create input queues
 	train_input_queue = tf.train.slice_input_producer(
@@ -76,6 +82,7 @@ def get_batches():
 										batch_size=BATCH_SIZE
 										,num_threads=1
 										)
-	return train_image_batch, train_label_batch, test_image_batch, test_label_batch
+	return number_of_train_files, number_of_test_files, train_image_batch\
+	, train_label_batch, test_image_batch, test_label_batch
 
 
