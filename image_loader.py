@@ -16,9 +16,9 @@ def image_locations_and_labels_from_files(image_locations_filename, image_labels
  
 
 def get_batches():
-	all_filepaths, all_labels = image_locations_and_labels_from_files(path_folder,label_folder)
-	all_filepaths = all_filepaths[0:99]
-	all_labels = all_labels[0:99]
+	all_filepaths, all_labels = image_locations_and_labels_from_files(PATH_FOLDER,LABEL_FOLDER)
+	all_filepaths = all_filepaths[0:99] #DEBUG
+	all_labels = all_labels[0:99] #DEBUG
 
 
 	# convert string into tensors
@@ -27,7 +27,7 @@ def get_batches():
 
 	# create a partition vector
 	partitions = [0] * len(all_filepaths)
-	partitions[:test_set_size] = [1] * test_set_size
+	partitions[:TEST_SET_SIZE] = [1] * TEST_SET_SIZE
 	random.shuffle(partitions)
 
 	# partition our data into a test and train set according to our partition vector
