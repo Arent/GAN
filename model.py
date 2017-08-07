@@ -200,11 +200,11 @@ def build_model():
 		# with tf.name_scope("loss_functions") as loss:
 		loss_discriminator_real = binary_cross_entropy(	x=probability_real, 
 														label=tf.ones_like(probability_real))
-		tf.variable_summaries("discriminator_real", loss_discriminator_real)
+		tf.variable_summaries("discriminator_real", tf.reduce_mean(loss_discriminator_real))
 
 		loss_discriminator_fake = binary_cross_entropy(	x=probability_fake, 
 														label=tf.zeros_like(probability_real))
-		tf.variable_summaries("discriminator_fake", loss_discriminator_fake)
+		tf.variable_summaries("discriminator_fake", tf.reduce_mean(loss_discriminator_fake))
 		loss_discriminator 	= tf.reduce_mean(loss_discriminator_real) \
 							+ tf.reduce_mean(loss_discriminator_fake)
 		tf.variable_summaries("discriminator", loss_discriminator)
