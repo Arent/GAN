@@ -1,6 +1,16 @@
 import tensorflow as tf 
 from hyper_parameters import * 
 
+def variable_summaries(var):
+  """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
+	mean = tf.reduce_mean(var)
+	tf.summary.scalar('mean', mean)
+	with tf.name_scope('stddev'):
+	  stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+	tf.summary.scalar('stddev', stddev)
+	tf.summary.scalar('max', tf.reduce_max(var))
+	tf.summary.scalar('min', tf.reduce_min(var))
+	tf.summary.histogram('histogram', var)
 
 
 def leaky_RELU(x):
@@ -12,9 +22,6 @@ def init_weight_variable(shape): #init_weight_variable generates a weight variab
 def binary_cross_entropy(x , label):
 	x = tf.clip_by_value(x, 1e-7, 1. - 1e-7) #for stability
 	return -(label * tf.log(x) + (1.- label)*tf.log(1. - x))
-
-
-
 
 def activate_convolution_transposed(input_dim, output_dim, strides, padding, input, activation , normalise=True):
 	assert len(input_dim) == 3
@@ -44,9 +51,14 @@ def activate_convolution_transposed(input_dim, output_dim, strides, padding, inp
 
 
 	activated_output_bias= activation(output_bias)
-	print(output_bias.get_shape())
-	tf.summary.histogram("activated_output",activated_output_bias )
-	tf.summary.histogram("output",output_bias )
+
+	with tf.variable_scope("Activated_output_bias"):
+		variable_summaries(activated_output_bias)
+	with tf.variable_scope("Output_bias"):
+		variable_summaries(output_bias)
+	with tf.variable_scope("Weights"):
+		variable_summaries(filter_weights)
+
 	return activated_output_bias
 
 def activate_convolution(filter_width, filter_height, input_dim, output_dim, strides, padding, input, activation, normalise=True):
@@ -71,8 +83,13 @@ def activate_convolution(filter_width, filter_height, input_dim, output_dim, str
 											scale=True, 
 											decay=NORMALISATION_DECAY)
 	activated_output_bias= activation(output_bias)
-	tf.summary.histogram("activated_output",activated_output_bias )
-	tf.summary.histogram("output",output_bias )
+
+	with tf.variable_scope("Activated_output_bias"):
+		variable_summaries(activated_output_bias)
+	with tf.variable_scope("Output_bias"):
+		variable_summaries(output_bias)
+	with tf.variable_scope("Weights"):
+		variable_summaries(filter)
 	return activated_output_bias
 
 def activate_fully_connected(input, input_dim, output_dim, activation, normalize=True):
@@ -91,8 +108,13 @@ def activate_fully_connected(input, input_dim, output_dim, activation, normalize
 
 	output_bias_logit = output_bias
 	activated_output_bias = activation(output_bias)
-	tf.summary.histogram("activated_output",activated_output_bias )
-	tf.summary.histogram("output",output_bias )
+	with tf.variable_scope("Activated_output_bias"):
+		variable_summaries(activated_output_bias)
+	with tf.variable_scope("Output_bias"):
+		variable_summaries(output_bias)
+	with tf.variable_scope("Weights"):
+		variable_summaries(weights)
+	
 	return activated_output_bias, output_bias_logit
 
 def generate(z):
