@@ -203,16 +203,17 @@ def build_model():
 		loss_discriminator_fake = tf.reduce_mean(binary_cross_entropy(	x=probability_fake, 
 													label=tf.zeros_like(probability_real)))
 		loss_discriminator 	= loss_discriminator_real + loss_discriminator_fake
-		loss_generator = tf.reduce_mean(binary_cross_entropy(	x=probability_fake,
-										label=tf.ones_like(probability_fake)))
-				
 
-		tf.summary.scalar("discriminator_fake", tf.reduce_mean(loss_discriminator_fake))													label=tf.ones_like(probability_fake)))
+		loss_generator = tf.reduce_mean(binary_cross_entropy(x=probability_fake,
+										label=tf.ones_like(probability_fake)))
+
+	with tf.variable_scope("loss"):
 		tf.summary.scalar("discriminator_real", tf.reduce_mean(loss_discriminator_real))
 		tf.summary.scalar("discriminator", loss_discriminator)
 		tf.summary.scalar("generator", loss_generator)
-
-			# Merge all tensorboard summaries
+		tf.summary.scalar("discriminator_fake", tf.reduce_mean(loss_discriminator_fake))		
+		
+		# Merge all tensorboard summfaks
 		merged_summary_op = tf.summary.merge_all()
 		merged_summary_op = tf.identity(merged_summary_op, name="merged_summaries")
 

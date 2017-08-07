@@ -8,12 +8,14 @@ import datetime
 import os
 import math
 
-def create_save_location():
-	timestamp= '{:%Y-%b-%d-%H-%M-%S}'.format(datetime.datetime.now())
-	assert os.path.isdir("saved_models/"+timestamp) == False
-	os.mkdir("saved_models/" + timestamp) 
+run_identifier = '{:%Y-%b-%d-%H-%M-%S}'.format(datetime.datetime.now())
 
-	return "saved_models/" + timestamp+ "/"
+def create_save_location():
+	assert os.path.isdir("saved_models/"+run_identifier) == False
+	
+	os.mkdir("saved_models/" + run_identifier) 
+	os.mkdir("saved_models/"+run_identifier+"/samples")
+	return "saved_models/" + run_identifier+ "/"
 
 save_location = create_save_location()
 
@@ -35,10 +37,13 @@ with tf.Session() as sess:
 	discriminator_variables=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model/discriminator')
 	generator_variables=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model/generator')
 
+	#optimiser = tf.train.AdamOptimizer(LEARNING_RATE, bet1=BETA_ADAM)
 	train_op_discrim = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA_ADAM)\
 							.minimize(loss_discriminator, var_list=discriminator_variables, name='D_step')
 	train_op_gen = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA_ADAM)\
 							.minimize(loss_generator, var_list=generator_variables, name='G_step')
+
+
 
   # initialize the variables
 	sess.run(tf.local_variables_initializer())
