@@ -42,7 +42,11 @@ def activate_convolution_transposed(input_dim, output_dim, strides, padding, inp
 													scale=True, 
 													decay=NORMALISATION_DECAY)
 
+
 	activated_output_bias= activation(output_bias)
+	print(output_bias.get_shape())
+	tf.summary.histogram("activated_output",activated_output_bias )
+	tf.summary.histogram("output",output_bias )
 	return activated_output_bias
 
 def activate_convolution(filter_width, filter_height, input_dim, output_dim, strides, padding, input, activation, normalise=True):
@@ -67,6 +71,8 @@ def activate_convolution(filter_width, filter_height, input_dim, output_dim, str
 											scale=True, 
 											decay=NORMALISATION_DECAY)
 	activated_output_bias= activation(output_bias)
+	tf.summary.histogram("activated_output",activated_output_bias )
+	tf.summary.histogram("output",output_bias )
 	return activated_output_bias
 
 def activate_fully_connected(input, input_dim, output_dim, activation, normalize=True):
@@ -85,7 +91,8 @@ def activate_fully_connected(input, input_dim, output_dim, activation, normalize
 
 	output_bias_logit = output_bias
 	activated_output_bias = activation(output_bias)
-	
+	tf.summary.histogram("activated_output",activated_output_bias )
+	tf.summary.histogram("output",output_bias )
 	return activated_output_bias, output_bias_logit
 
 def generate(z):
