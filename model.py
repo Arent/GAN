@@ -215,7 +215,7 @@ def discriminate(image):
 											activation=tf.nn.tanh) 
 	return judgement, logit_judgement
 
-def build_model():
+def create_loss_functions():
 	with tf.variable_scope("model") as scope:
 		Z = tf.placeholder(dtype=tf.float32, shape=(None, Z_DIMENSION))
 		real_images = tf.placeholder(	dtype=tf.float32, 
@@ -235,6 +235,7 @@ def build_model():
 
 		loss_generator = tf.reduce_mean(binary_cross_entropy(x=probability_fake,
 										label=tf.ones_like(probability_fake)))
+
 
 	with tf.variable_scope("loss"):
 		tf.summary.scalar("discriminator_real", tf.reduce_mean(loss_discriminator_real))
