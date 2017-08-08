@@ -215,13 +215,9 @@ def discriminate(image):
 											activation=tf.nn.tanh) 
 	return judgement, logit_judgement
 
-def build_model():
+def create_loss_functions(Z, real_images):
 	with tf.variable_scope("model") as scope:
-		Z = tf.placeholder(dtype=tf.float32, shape=(None, Z_DIMENSION))
-		real_images = tf.placeholder(	dtype=tf.float32, 
-										shape=(None,IMAGE_HEIGHT,IMAGE_WIDTH,NUM_CHANNELS))
 		fake_images = generate(Z)
-
 
 		probability_real, logit_real = discriminate(real_images)
 		scope.reuse_variables() #Ensure the discriminate functions doesn't create new variables
@@ -244,8 +240,33 @@ def build_model():
 		tf.summary.scalar("discriminator_fake", tf.reduce_mean(loss_discriminator_fake))		
 	
 
-	return Z, real_images, probability_real, logit_real, probability_fake, logit_fake,\
-			loss_discriminator_real, loss_discriminator_fake, loss_discriminator ,loss_generator#, merged_summary_op
+	return  loss_discriminator ,loss_generator
+def create_training_operations(Z, real_images):
+
+	loss_discriminator ,loss_generator = create_loss_functions(Z, real_images)
+	discriminator_variables=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model/discriminator')
+	generator_variables=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model/generator')
+
+	optimizer = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA_ADAM)
+	discriminator_gradients = optimizer.compute_gradients(loss_discriminator, var_list=discriminator_variables)
+	generator_gradients = optimizer.compute_gradients(loss_generator, var_list=generator_variables)
+
+	train_op_discrim = optimizer.apply_gradients(grads_and_vars=discriminator_gradients, name='D_step')
+	train_op_gen	 = optimizer.apply_gradients(grads_and_vars=generator_gradients, name='G_step')
+
+		# Summarize all gradients
+	for grad, var in discriminator_gradients + generator_gradients:
+		if not grad == None:
+			tf.summary.histogram(var.name + '/gradient', grad)
+
+	return train_op_discrim, train_op_gen
+
+
+
+
+
+
+
 
 
 

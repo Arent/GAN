@@ -25,23 +25,6 @@ n_train_files, n_test_files\
 
 batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
 
-Z, real_images, probability_real, logit_real, probability_fake, logit_fake\
-,loss_discriminator_real, loss_discriminator_fake, loss_discriminator ,loss_generator = build_model()
-
-discriminator_variables=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model/discriminator')
-generator_variables=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model/generator')
-
-optimizer = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA_ADAM)
-discriminator_gradients = optimizer.compute_gradients(loss_discriminator, var_list=discriminator_variables)
-generator_gradients = optimizer.compute_gradients(loss_generator, var_list=generator_variables)
-
-train_op_discrim = optimizer.apply_gradients(grads_and_vars=discriminator_gradients, name='D_step')
-train_op_gen	 = optimizer.apply_gradients(grads_and_vars=generator_gradients, name='G_step')
-
-# Summarize all gradients
-for grad, var in discriminator_gradients + generator_gradients:
-	if not grad == None:
-		tf.summary.histogram(var.name + '/gradient', grad)
 
 # Merge all tensorboard summfaks
 merged_summary_op = tf.summary.merge_all()
@@ -49,7 +32,7 @@ merged_summary_op = tf.identity(merged_summary_op, name="merged_summaries")
 
 with tf.Session() as sess:
 	saver = tf.train.Saver(max_to_keep=10)
-	summary_writer = tf.summary.FileWriter('tensorboard_logs'+"/"+run_identifier, tf.get_default_graph())
+	summary_writer = tf.summary.FileWriter('tensorboard_logs'+"/"run_identifier), tf.get_default_graph())
 
 
   # initialize the variables
