@@ -22,9 +22,10 @@ save_location = create_save_location()
 
 n_train_files, n_test_files\
 ,train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
-
 batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
 
+# get training operations and placeholders
+train_op_discrim, train_op_gen = create_training_operations()
 
 # Merge all tensorboard summfaks
 merged_summary_op = tf.summary.merge_all()
@@ -32,7 +33,7 @@ merged_summary_op = tf.identity(merged_summary_op, name="merged_summaries")
 
 with tf.Session() as sess:
 	saver = tf.train.Saver(max_to_keep=10)
-	summary_writer = tf.summary.FileWriter('tensorboard_logs'+"/"run_identifier), tf.get_default_graph())
+	summary_writer = tf.summary.FileWriter("".join(['tensorboard_logs',"/",run_identifier]), tf.get_default_graph())
 
 
   # initialize the variables
@@ -54,11 +55,10 @@ with tf.Session() as sess:
 			z_batch = np.random.uniform(-1, 1, size=[BATCH_SIZE, Z_DIMENSION]).astype(np.float32)
 			image_batch  = sess.run(train_image_batch)
 
-			_, loss_generator_local = sess.run([train_op_gen, loss_generator], feed_dict={Z:z_batch, real_images:image_batch})
-			_, loss_discriminatorator_local = sess.run([train_op_discrim, loss_discriminator], feed_dict={Z:z_batch, real_images:image_batch})
+			_,  = sess.run([train_op_gen], feed_dict={Z:z_batch, real_images:image_batch})
+			_,  = sess.run([train_op_discrim], feed_dict={Z:z_batch, real_images:image_batch})
 			
 			
-
 			summary_str = sess.run(merged_summary_op, feed_dict={Z:z_batch, real_images:image_batch})
 			summary_writer.add_summary(summary_str, iBatch)
 

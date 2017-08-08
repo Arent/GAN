@@ -241,7 +241,12 @@ def create_loss_functions(Z, real_images):
 	
 
 	return  loss_discriminator ,loss_generator
-def create_training_operations(Z, real_images):
+
+
+def create_training_operations():
+	Z = tf.placeholder(dtype=tf.float32, shape=(None, Z_DIMENSION))
+	real_images = tf.placeholder(	dtype=tf.float32, 
+									shape=(None,IMAGE_HEIGHT,IMAGE_WIDTH,NUM_CHANNELS))
 
 	loss_discriminator ,loss_generator = create_loss_functions(Z, real_images)
 	discriminator_variables=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model/discriminator')
