@@ -2,7 +2,7 @@ import tensorflow as tf
 from hyper_parameters import * 
 
 def variable_summaries(var):
-  """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
+	"""Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
 	mean = tf.reduce_mean(var)
 	tf.summary.scalar('mean', mean)
 	with tf.name_scope('stddev'):
@@ -215,7 +215,7 @@ def discriminate(image):
 											activation=tf.nn.tanh) 
 	return judgement, logit_judgement
 
-def create_loss_functions():
+def build_model():
 	with tf.variable_scope("model") as scope:
 		Z = tf.placeholder(dtype=tf.float32, shape=(None, Z_DIMENSION))
 		real_images = tf.placeholder(	dtype=tf.float32, 
@@ -242,13 +242,10 @@ def create_loss_functions():
 		tf.summary.scalar("discriminator", loss_discriminator)
 		tf.summary.scalar("generator", loss_generator)
 		tf.summary.scalar("discriminator_fake", tf.reduce_mean(loss_discriminator_fake))		
-		
-		# Merge all tensorboard summfaks
-		merged_summary_op = tf.summary.merge_all()
-		merged_summary_op = tf.identity(merged_summary_op, name="merged_summaries")
+	
 
 	return Z, real_images, probability_real, logit_real, probability_fake, logit_fake,\
-			loss_discriminator_real, loss_discriminator_fake, loss_discriminator ,loss_generator, merged_summary_op
+			loss_discriminator_real, loss_discriminator_fake, loss_discriminator ,loss_generator#, merged_summary_op
 
 
 
