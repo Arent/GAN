@@ -19,7 +19,7 @@ def create_save_location():
 
 save_location = create_save_location()
 
-
+#Get que with training files
 n_train_files, n_test_files\
 ,train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
 batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
@@ -27,15 +27,19 @@ batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
 # get training operations and placeholders
 train_op_discrim, train_op_gen = create_training_operations()
 
-# Merge all tensorboard summfaks
+
+# Merge all tensorboard summaries
 merged_summary_op = tf.summary.merge_all()
 merged_summary_op = tf.identity(merged_summary_op, name="merged_summaries")
 
+#Launch graph
 with tf.Session() as sess:
 	saver = tf.train.Saver(max_to_keep=10)
 	summary_writer = tf.summary.FileWriter("".join(['tensorboard_logs',"/",run_identifier]), tf.get_default_graph())
 
-
+	Z = tf.get_default_graph().get_tensor_by_name('Z:0')
+	real_images =tf.get_default_graph().get_tensor_by_name('real_images:0') 
+	
   # initialize the variables
 	sess.run(tf.local_variables_initializer())
 	sess.run(tf.global_variables_initializer())
@@ -47,18 +51,21 @@ with tf.Session() as sess:
 	try:
 		while not coord.should_stop():
 			print(iBatch)
+
+			#retrieve and display epoch and batch
 			epoch = int(iBatch / batches_per_epoch) + 1
 			batch_number = iBatch % batches_per_epoch
-
 			print('Epoch: '+str(epoch) +'/'+str(EPOCHS) + ' Batch: ' + str(batch_number) +'/' + str(batches_per_epoch -1))
 			
+			#Get Z values and image batch
 			z_batch = np.random.uniform(-1, 1, size=[BATCH_SIZE, Z_DIMENSION]).astype(np.float32)
 			image_batch  = sess.run(train_image_batch)
 
+			#Do the acual training
 			_,  = sess.run([train_op_gen], feed_dict={Z:z_batch, real_images:image_batch})
 			_,  = sess.run([train_op_discrim], feed_dict={Z:z_batch, real_images:image_batch})
 			
-			
+			#Add summaries of variables to tensorboard
 			summary_str = sess.run(merged_summary_op, feed_dict={Z:z_batch, real_images:image_batch})
 			summary_writer.add_summary(summary_str, iBatch)
 
@@ -74,6 +81,10 @@ with tf.Session() as sess:
 	finally:
 		# stop our queue threads and properly close the session
 		print("This run can be identified as {}".format(run_identifier))
+		print("Run the command line:\n" \
+		"--> tensorboard --logdir=/tmp/tensorflow_logs " \
+		"\nThen open http://0.0.0.0:6006/ into your web browser")
+
 		coord.request_stop()
 		coord.join(threads)
 		sess.close()

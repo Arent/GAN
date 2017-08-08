@@ -161,8 +161,7 @@ def generate(z):
 											input=activated_layer_4,
 											activation=tf.nn.relu,
 											normalise=True)
-
-	fake_image = activated_layer_5			
+		fake_image = activated_layer_5 		
 	return fake_image
 
 def discriminate(image):
@@ -218,6 +217,8 @@ def discriminate(image):
 def create_loss_functions(Z, real_images):
 	with tf.variable_scope("model") as scope:
 		fake_images = generate(Z)
+		tf.identity(fake_images, "fake_images") #WHY ISNT THIS WORKING
+		# tf.identity(fake_images, name="fake_images")	
 
 		probability_real, logit_real = discriminate(real_images)
 		scope.reuse_variables() #Ensure the discriminate functions doesn't create new variables
@@ -240,13 +241,13 @@ def create_loss_functions(Z, real_images):
 		tf.summary.scalar("discriminator_fake", tf.reduce_mean(loss_discriminator_fake))		
 	
 
-	return  loss_discriminator ,loss_generator
+	return  loss_discriminator, loss_generator
 
 
 def create_training_operations():
-	Z = tf.placeholder(dtype=tf.float32, shape=(None, Z_DIMENSION))
+	Z = tf.placeholder(dtype=tf.float32, shape=(None, Z_DIMENSION), name='Z')
 	real_images = tf.placeholder(	dtype=tf.float32, 
-									shape=(None,IMAGE_HEIGHT,IMAGE_WIDTH,NUM_CHANNELS))
+									shape=(None,IMAGE_HEIGHT,IMAGE_WIDTH,NUM_CHANNELS),name='real_images')
 
 	loss_discriminator ,loss_generator = create_loss_functions(Z, real_images)
 	discriminator_variables=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model/discriminator')
@@ -265,11 +266,6 @@ def create_training_operations():
 			tf.summary.histogram(var.name + '/gradient', grad)
 
 	return train_op_discrim, train_op_gen
-
-
-
-
-
 
 
 
