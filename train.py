@@ -11,12 +11,10 @@ import math
 run_identifier = '{:%Y-%b-%d-%H-%M-%S}'.format(datetime.datetime.now())
 
 def create_save_location():
-	assert os.path.isdir("saved_models/"+run_identifier) == False
-	
-	os.mkdir("saved_models/" + run_identifier) 
-	os.mkdir("saved_models/"+run_identifier+"/samples")
-	return "saved_models/" + run_identifier+ "/"
-
+	assert os.path.isdir("".join([model_folder,run_identifier])) == False
+	os.mkdir("".join([model_folder,run_identifier]))
+	os.mkdir("".join([model_folder,run_identifier, sample_folder]))
+	return "".join([model_folder,run_identifier,"/"])
 save_location = create_save_location()
 
 #Get que with training files

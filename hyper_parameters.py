@@ -5,6 +5,13 @@ IMAGE_HEIGHT  = 64
 IMAGE_WIDTH   = 64
 NUM_CHANNELS  = 3
 
+'parameters regarding saving and restoring'
+model_identifier = "2017-Aug-08-16-52-09"
+model_name = "Epoch_1_Batch_0.ckpt.meta"
+model_folder = "saved_models/"
+sample_folder = 'samples/'
+
+
 'parameters regarding training'
 TEST_SET_SIZE = 5
 BATCH_SIZE    = 16
