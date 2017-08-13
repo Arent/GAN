@@ -22,32 +22,59 @@ def rescale_and_save_image(image_array, iBatch):
 	image = Image.fromarray(image_array)
 	image.save("".join([model_folder,run_identifier,"/",sample_folder,str(iBatch),".jpeg"]))
 
-#Get que with training files
-n_train_files, n_test_files\
-,train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
-batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
-
 #Launch graph
 with tf.Session() as sess:
 	#get training operations and placeholders
-	build_graph()
-	graph = tf.get_default_graph()
+	if run_type == "train":
+		#Build the graph
+		#Get que with training files
+		n_train_files, n_test_files\
+		,train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
+		batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
 
-	create_training_operations()
+		build_graph()
+		#add training operations
+		create_training_operations()
+		
+		# initialize the variables
+		sess.run(tf.local_variables_initializer())
+		sess.run(tf.global_variables_initializer())
+
+		graph = tf.get_default_graph()
+		
+	elif run_type == "retrain":
+		#restore graph
+		saver = tf.train.import_meta_graph("".join([model_folder, model_identifier,"/",model_name]))
+		#restore variables
+		saver.restore(sess,tf.train.latest_checkpoint("".join([model_folder,model_identifier,"/"])))
+		graph = tf.get_default_graph()
+		#Delete old data loader objects and create new ones. (Cant find a better way...)
+		graph.clear_collection("queue_runners")
+		graph.clear_collection("local_variables")
+		
+		#Get que with training files
+		n_train_files, n_test_files\
+		,train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
+		batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
+		# initialize the variables
+		sess.run(tf.local_variables_initializer())
+
+	else:
+	   raise NotImplementedError
+
+
+
 	train_op_discrim = graph.get_operation_by_name("train_operation_discriminator")
 	train_op_gen = graph.get_operation_by_name("train_operation_generator")
-	merged_summary_op = graph.get_operation_by_name("merged_summaries")
 	images_tensor = graph.get_tensor_by_name('model/fake_images:0')
 
-	saver = tf.train.Saver(tf.trainable_variables(),max_to_keep=None)
-	summary_writer = tf.summary.FileWriter("".join(['tensorboard_logs',"/",run_identifier]), tf.get_default_graph())
+	saver = tf.train.Saver(max_to_keep=None)
+	summary_writer = tf.summary.FileWriter("".join(['tensorboard_logs',"/",run_identifier]), graph)
 
-	Z = tf.get_default_graph().get_tensor_by_name('Z:0')
-	real_images =tf.get_default_graph().get_tensor_by_name('real_images:0') 
+	Z = graph.get_tensor_by_name('Z:0')
+	real_images =graph.get_tensor_by_name('real_images:0') 
 	
-  # initialize the variables
-	sess.run(tf.local_variables_initializer())
-	sess.run(tf.global_variables_initializer())
+
 
   # initialize the queue threads to start to shovel data
 	coord = tf.train.Coordinator()
@@ -71,9 +98,10 @@ with tf.Session() as sess:
 			_,  = sess.run([train_op_discrim], feed_dict={Z:z_batch, real_images:image_batch})
 			
 			#Add summaries of variables to tensorboard
+			merged_summary_op = tf.summary.merge_all()
 			summary_str = sess.run(merged_summary_op, feed_dict={Z:z_batch, real_images:image_batch})
 			summary_writer.add_summary(summary_str, iBatch)
-			if iBatch == 0: #Save metagraph only once (verrrrrryy large) 
+			if iBatch == 0: #Save metagraph only once 
 				saved_path = saver.save(sess, save_location  +str(batch_number), write_meta_graph=True)
 			
 			if batch_number % 20 == 0: #save variable state and make sample image
