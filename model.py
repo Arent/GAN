@@ -233,28 +233,6 @@ def create_loss_functions(probability_real, logit_real,probability_fake, logit_f
 
 	return  loss_discriminator, loss_generator
 
-def build_graph():
-	Z = tf.placeholder(dtype=tf.float32, shape=(None, Z_DIMENSION), name='Z')
-	real_images = tf.placeholder(	dtype=tf.float32, 
-									shape=(None,IMAGE_HEIGHT,IMAGE_WIDTH,NUM_CHANNELS),
-									name='real_images')
-
-
-	with tf.variable_scope("model") as scope:
-		fake_images = generate(Z)
-		tf.identity(fake_images, "fake_images") 
-		probability_real, logit_real = discriminate(real_images)
-		scope.reuse_variables() #Ensure the discriminate functions doesn't create new variables
-		probability_fake, logit_fake = discriminate(fake_images)
-
-		loss_discriminator, loss_generator =create_loss_functions(probability_real, 
-												logit_real,	probability_fake, logit_fake)	
-		tf.identity(loss_discriminator, "loss_discriminator") 
-		tf.identity(loss_discriminator, "loss_generator") 
-
-
-
-
 def create_training_operations():
 	# retrieve the loss functions and variable list
 	# with tf.variable_scope("model") as scope:
@@ -291,9 +269,27 @@ def create_training_operations():
 	# Merge all tensorboard summaries, identidy the merged operations
 	merged_summary_op = tf.summary.merge_all()
 	tf.identity(merged_summary_op, name="merged_summaries")
-	
 
 
+def build_graph():
+	Z = tf.placeholder(dtype=tf.float32, shape=(None, Z_DIMENSION), name='Z')
+	real_images = tf.placeholder(	dtype=tf.float32, 
+									shape=(None,IMAGE_HEIGHT,IMAGE_WIDTH,NUM_CHANNELS),
+									name='real_images')
 
 
+	with tf.variable_scope("model") as scope:
+		fake_images = generate(Z)
+		tf.identity(fake_images, "fake_images") 
+		probability_real, logit_real = discriminate(real_images)
+		scope.reuse_variables() #Ensure the discriminate functions doesn't create new variables
+		probability_fake, logit_fake = discriminate(fake_images)
+
+		loss_discriminator, loss_generator =create_loss_functions(probability_real, 
+												logit_real,	probability_fake, logit_fake)	
+		tf.identity(loss_discriminator, "loss_discriminator") 
+		tf.identity(loss_discriminator, "loss_generator") 
+
+
+	create_training_operations()
 

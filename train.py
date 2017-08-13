@@ -22,58 +22,65 @@ def rescale_and_save_image(image_array, iBatch):
 	image = Image.fromarray(image_array)
 	image.save("".join([model_folder,run_identifier,"/",sample_folder,str(iBatch),".jpeg"]))
 
+def initialise_graph_train(session):
+	#Builds the graph, create data loading operations and initialises variables
+	#Get que with training files
+	n_train_files, n_test_files\
+	,train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
+	batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
+
+	build_graph() #this creates all variables and operations needed to train
+
+	# initialize the variables
+	session.run(tf.local_variables_initializer())
+	session.run(tf.global_variables_initializer())
+
+	return = tf.get_default_graph()
+
+def initialise_graph_retrain(session):
+	##Restorres the graph, delete and recreate data loading operations 
+	#and initialises local variables
+	
+	saver = tf.train.import_meta_graph("".join([model_folder, model_identifier,"/",model_name]))
+	#restore variables
+	saver.restore(sess,tf.train.latest_checkpoint("".join([model_folder,model_identifier,"/"])))
+	graph = tf.get_default_graph()
+	#Delete old data loader objects and create new ones. (Cant find a better way...)
+	graph.clear_collection("queue_runners")
+	graph.clear_collection("local_variables")
+	
+	#Get que with training files
+	n_train_files, n_test_files\
+	,train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
+	batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
+	# initialize the local variables, global variables have been restored
+	sess.run(tf.local_variables_initializer())	
+
+	return graph
+
+
 #Launch graph
 with tf.Session() as sess:
 	#get training operations and placeholders
 	if run_type == "train":
-		#Build the graph
-		#Get que with training files
-		n_train_files, n_test_files\
-		,train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
-		batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
-
-		build_graph()
-		#add training operations
-		create_training_operations()
-		
-		# initialize the variables
-		sess.run(tf.local_variables_initializer())
-		sess.run(tf.global_variables_initializer())
-
-		graph = tf.get_default_graph()
-		
+		graph = initialise_graph_train(sess)
 	elif run_type == "retrain":
-		#restore graph
-		saver = tf.train.import_meta_graph("".join([model_folder, model_identifier,"/",model_name]))
-		#restore variables
-		saver.restore(sess,tf.train.latest_checkpoint("".join([model_folder,model_identifier,"/"])))
-		graph = tf.get_default_graph()
-		#Delete old data loader objects and create new ones. (Cant find a better way...)
-		graph.clear_collection("queue_runners")
-		graph.clear_collection("local_variables")
-		
-		#Get que with training files
-		n_train_files, n_test_files\
-		,train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
-		batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
-		# initialize the variables
-		sess.run(tf.local_variables_initializer())
-
+		graph = initialise_graph_retrain(sess)
 	else:
 	   raise NotImplementedError
 
-
-
+	#Get training operations from graph
 	train_op_discrim = graph.get_operation_by_name("train_operation_discriminator")
 	train_op_gen = graph.get_operation_by_name("train_operation_generator")
 	images_tensor = graph.get_tensor_by_name('model/fake_images:0')
 
+	#Create a saver object to check progress of training
 	saver = tf.train.Saver(max_to_keep=None)
 	summary_writer = tf.summary.FileWriter("".join(['tensorboard_logs',"/",run_identifier]), graph)
 
+	#Get placeholders
 	Z = graph.get_tensor_by_name('Z:0')
 	real_images =graph.get_tensor_by_name('real_images:0') 
-	
 
 
   # initialize the queue threads to start to shovel data
