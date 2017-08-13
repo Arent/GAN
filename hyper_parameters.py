@@ -6,16 +6,17 @@ IMAGE_WIDTH   = 64
 NUM_CHANNELS  = 3
 
 'parameters regarding saving and restoring'
-model_identifier = "2017-Aug-08-16-52-09"
-model_name = "Epoch_1_Batch_0.ckpt.meta"
 model_folder = "saved_models/"
 sample_folder = 'samples/'
+model_identifier = "2017-Aug-08-16-52-09"
+model_name = "Epoch_1_Batch_0.ckpt.meta"
+
 
 
 'parameters regarding training'
 TEST_SET_SIZE = 5
-BATCH_SIZE    = 16
-EPOCHS = 1
+BATCH_SIZE    = 64
+EPOCHS = 100
 NORMALISATION_DECAY = 0.9
 RELU_ALPHA = 1/6
 BETA_ADAM = 0.5

@@ -214,58 +214,84 @@ def discriminate(image):
 											activation=tf.nn.tanh) 
 	return judgement, logit_judgement
 
-def create_loss_functions(Z, real_images):
-	with tf.variable_scope("model") as scope:
-		fake_images = generate(Z)
-		tf.identity(fake_images, "fake_images") #WHY ISNT THIS WORKING
-		# tf.identity(fake_images, name="fake_images")	
+def create_loss_functions(probability_real, logit_real,probability_fake, logit_fake):
+	#Create loss functions 
+	loss_discriminator_real = tf.reduce_mean(binary_cross_entropy(	x=probability_real, 
+												label=tf.ones_like(probability_real)))
+	loss_discriminator_fake = tf.reduce_mean(binary_cross_entropy(	x=probability_fake, 
+												label=tf.zeros_like(probability_real)))
+	loss_discriminator 	= loss_discriminator_real + loss_discriminator_fake
 
-		probability_real, logit_real = discriminate(real_images)
-		scope.reuse_variables() #Ensure the discriminate functions doesn't create new variables
-		probability_fake, logit_fake = discriminate(fake_images)
-		# with tf.name_scope("loss_functions") as loss:
-		loss_discriminator_real = tf.reduce_mean(binary_cross_entropy(	x=probability_real, 
-													label=tf.ones_like(probability_real)))
-		loss_discriminator_fake = tf.reduce_mean(binary_cross_entropy(	x=probability_fake, 
-													label=tf.zeros_like(probability_real)))
-		loss_discriminator 	= loss_discriminator_real + loss_discriminator_fake
-
-		loss_generator = tf.reduce_mean(binary_cross_entropy(x=probability_fake,
+	loss_generator = tf.reduce_mean(binary_cross_entropy(x=probability_fake,
 										label=tf.ones_like(probability_fake)))
 
-
-	with tf.variable_scope("loss"):
-		tf.summary.scalar("discriminator_real", tf.reduce_mean(loss_discriminator_real))
-		tf.summary.scalar("discriminator", loss_discriminator)
-		tf.summary.scalar("generator", loss_generator)
-		tf.summary.scalar("discriminator_fake", tf.reduce_mean(loss_discriminator_fake))		
-	
+	# summarize loss functions
+	tf.summary.scalar("discriminator_real", tf.reduce_mean(loss_discriminator_real))
+	tf.summary.scalar("discriminator", loss_discriminator)
+	tf.summary.scalar("generator", loss_generator)
+	tf.summary.scalar("discriminator_fake", tf.reduce_mean(loss_discriminator_fake))		
 
 	return  loss_discriminator, loss_generator
 
-
-def create_training_operations():
+def build_graph():
 	Z = tf.placeholder(dtype=tf.float32, shape=(None, Z_DIMENSION), name='Z')
 	real_images = tf.placeholder(	dtype=tf.float32, 
-									shape=(None,IMAGE_HEIGHT,IMAGE_WIDTH,NUM_CHANNELS),name='real_images')
+									shape=(None,IMAGE_HEIGHT,IMAGE_WIDTH,NUM_CHANNELS),
+									name='real_images')
 
-	loss_discriminator ,loss_generator = create_loss_functions(Z, real_images)
-	discriminator_variables=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model/discriminator')
-	generator_variables=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model/generator')
 
+	with tf.variable_scope("model") as scope:
+		fake_images = generate(Z)
+		tf.identity(fake_images, "fake_images") 
+		probability_real, logit_real = discriminate(real_images)
+		scope.reuse_variables() #Ensure the discriminate functions doesn't create new variables
+		probability_fake, logit_fake = discriminate(fake_images)
+
+		loss_discriminator, loss_generator =create_loss_functions(probability_real, 
+												logit_real,	probability_fake, logit_fake)	
+		tf.identity(loss_discriminator, "loss_discriminator") 
+		tf.identity(loss_discriminator, "loss_generator") 
+
+
+
+
+def create_training_operations():
+	# retrieve the loss functions and variable list
+	# with tf.variable_scope("model") as scope:
+
+	loss_discriminator = tf.get_default_graph()\
+							.get_tensor_by_name("model/loss_discriminator:0")
+
+	loss_generator = tf.get_default_graph()\
+							.get_tensor_by_name("model/loss_generator:0")
+	
+	discriminator_variables=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 
+								scope='model/discriminator')
+	generator_variables=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 
+								scope='model/generator')
+
+	#Create optimizer 
 	optimizer = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA_ADAM)
+	
+	#Explicitly create gradients for optimizing and logging
 	discriminator_gradients = optimizer.compute_gradients(loss_discriminator, var_list=discriminator_variables)
 	generator_gradients = optimizer.compute_gradients(loss_generator, var_list=generator_variables)
 
-	train_op_discrim = optimizer.apply_gradients(grads_and_vars=discriminator_gradients, name='D_step')
-	train_op_gen	 = optimizer.apply_gradients(grads_and_vars=generator_gradients, name='G_step')
-
-		# Summarize all gradients
+	# Summarize all gradients
 	for grad, var in discriminator_gradients + generator_gradients:
 		if not grad == None:
 			tf.summary.histogram(var.name + '/gradient', grad)
 
-	return train_op_discrim, train_op_gen
+	#Create and identiy the training operations
+	train_op_discrim = optimizer.apply_gradients(grads_and_vars=discriminator_gradients, 
+		name='train_operation_discriminator')
+	train_op_gen	 = optimizer.apply_gradients(grads_and_vars=generator_gradients, 
+		name='train_operation_generator')
+
+	# Merge all tensorboard summaries, identidy the merged operations
+	merged_summary_op = tf.summary.merge_all()
+	merged_summary_op = tf.identity(merged_summary_op, name="merged_summaries")
+	
 
 
 

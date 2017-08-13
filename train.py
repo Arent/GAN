@@ -13,26 +13,33 @@ run_identifier = '{:%Y-%b-%d-%H-%M-%S}'.format(datetime.datetime.now())
 def create_save_location():
 	assert os.path.isdir("".join([model_folder,run_identifier])) == False
 	os.mkdir("".join([model_folder,run_identifier]))
-	os.mkdir("".join([model_folder,run_identifier, sample_folder]))
+	os.mkdir("".join([model_folder,run_identifier,"/",sample_folder]))
 	return "".join([model_folder,run_identifier,"/"])
 save_location = create_save_location()
+
+def rescale_and_save_image(image_array, iBatch):
+	image_array = np.uint8((image_array +1)*127.5) # rescale and make into integer\
+	image = Image.fromarray(image_array)
+	image.save("".join([model_folder,run_identifier,"/",sample_folder,str(iBatch),".jpeg"]))
 
 #Get que with training files
 n_train_files, n_test_files\
 ,train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
 batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
 
-# get training operations and placeholders
-train_op_discrim, train_op_gen = create_training_operations()
-
-
-# Merge all tensorboard summaries
-merged_summary_op = tf.summary.merge_all()
-merged_summary_op = tf.identity(merged_summary_op, name="merged_summaries")
-
 #Launch graph
 with tf.Session() as sess:
-	saver = tf.train.Saver(max_to_keep=10)
+	#get training operations and placeholders
+	build_graph()
+	graph = tf.get_default_graph()
+
+	create_training_operations()
+	train_op_discrim = graph.get_operation_by_name("train_operation_discriminator")
+	train_op_gen = graph.get_operation_by_name("train_operation_generator")
+	merged_summary_op = graph.get_operation_by_name("merged_summaries")
+	images_tensor = graph.get_tensor_by_name('model/fake_images:0')
+
+	saver = tf.train.Saver(tf.trainable_variables(),max_to_keep=None)
 	summary_writer = tf.summary.FileWriter("".join(['tensorboard_logs',"/",run_identifier]), tf.get_default_graph())
 
 	Z = tf.get_default_graph().get_tensor_by_name('Z:0')
@@ -66,9 +73,14 @@ with tf.Session() as sess:
 			#Add summaries of variables to tensorboard
 			summary_str = sess.run(merged_summary_op, feed_dict={Z:z_batch, real_images:image_batch})
 			summary_writer.add_summary(summary_str, iBatch)
-
-			if batch_number % (batches_per_epoch / 2 ) == 0:
-				saved_path = saver.save(sess, save_location +"Epoch_"+str(epoch) + "_Batch_" +str(batch_number)+".ckpt")
+			if iBatch == 0: #Save metagraph only once (verrrrrryy large) 
+				saved_path = saver.save(sess, save_location  +str(batch_number), write_meta_graph=True)
+			
+			if batch_number % 20 == 0: #save variable state and make sample image
+				images = sess.run(images_tensor,feed_dict={Z:z_batch})
+				rescale_and_save_image(images[0,:,:,:], iBatch)
+				saved_path = saver.save(sess, save_location +"Epoch_"+str(epoch) + "_Batch_" +str(batch_number)
+									,write_meta_graph=False)
 				print("Model saved in file: %s" % saved_path)
 			iBatch = iBatch + 1
 	
