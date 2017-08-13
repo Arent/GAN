@@ -290,7 +290,7 @@ def create_training_operations():
 
 	# Merge all tensorboard summaries, identidy the merged operations
 	merged_summary_op = tf.summary.merge_all()
-	merged_summary_op = tf.identity(merged_summary_op, name="merged_summaries")
+	tf.identity(merged_summary_op, name="merged_summaries")
 	
 
 
