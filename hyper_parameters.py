@@ -1,5 +1,5 @@
 #parameters that are actually just settings
-run_type = 'retrain' # train or retrain
+run_type = 'train' # train or retrain
 PATH_FOLDER = 'data/image_locations'
 LABEL_FOLDER = 'data/image_labels'
 model_folder = "saved_models/"
