@@ -4,7 +4,7 @@ import numpy as np
 import random
 from tensorflow.python.framework import ops
 from tensorflow.python.framework import dtypes
-import Image
+from PIL import Image
 from hyper_parameters import *
 
 def image_locations_and_labels_from_files(image_locations_filename, image_labels_filename):
