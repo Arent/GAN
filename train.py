@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-import Image
+from PIL import Image
 from hyper_parameters import *
 from image_loader import *
 from model import *
@@ -35,7 +35,7 @@ def initialise_graph_train(session):
 	session.run(tf.local_variables_initializer())
 	session.run(tf.global_variables_initializer())
 
-	return = tf.get_default_graph()
+	return tf.get_default_graph()
 
 def initialise_graph_retrain(session):
 	##Restorres the graph, delete and recreate data loading operations 

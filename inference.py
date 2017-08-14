@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-import Image
+from PIL import Image
 import hyper_parameters
 
 BATCH_SIZE    = 10  # overwrite batch size if needed
