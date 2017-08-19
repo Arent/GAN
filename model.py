@@ -28,7 +28,9 @@ def binary_cross_entropy(x, label):
     return -(label * tf.log(x) + (1. - label) * tf.log(1. - x))
 
 
-def activate_convolution_transposed(input_dim, output_dim, strides, padding, input, activation, normalise=True):
+def activate_convolution_transposed(input_dim, output_dim,
+                                    strides, padding, input,
+                                    activation, normalise=True):
     assert len(input_dim) == 3
     assert len(output_dim) == 3
 
@@ -68,7 +70,9 @@ def activate_convolution_transposed(input_dim, output_dim, strides, padding, inp
     return activated_output_bias
 
 
-def activate_convolution(filter_width, filter_height, input_dim, output_dim, strides, padding, input, activation, normalise=True):
+def activate_convolution(filter_width, filter_height, input_dim,
+                         output_dim, strides, padding, input,
+                         x				activation, normalise=True):
     assert len(input_dim) == 3
     assert len(output_dim) == 3
 
@@ -231,10 +235,10 @@ def discriminate(image):
 
 def create_loss_functions(probability_real, logit_real, probability_fake, logit_fake):
     # Create loss functions
-    loss_discriminator_real = tf.reduce_mean(binary_cross_entropy(	x=probability_real,
-                                                                   label=tf.ones_like(probability_real)))
-    loss_discriminator_fake = tf.reduce_mean(binary_cross_entropy(	x=probability_fake,
-                                                                   label=tf.zeros_like(probability_real)))
+    loss_discriminator_real = tf.reduce_mean(binary_cross_entropy(x=probability_real,
+                                                                  label=tf.ones_like(probability_real)))
+    loss_discriminator_fake = tf.reduce_mean(binary_cross_entropy(x=probability_fake,
+                                                                  label=tf.zeros_like(probability_real)))
     loss_discriminator = loss_discriminator_real + loss_discriminator_fake
 
     loss_generator = tf.reduce_mean(binary_cross_entropy(x=probability_fake,
@@ -302,13 +306,13 @@ def build_graph():
         fake_images = generate(Z)
         tf.identity(fake_images, "fake_images")
         probability_real, logit_real = discriminate(real_images)
-        
+
         # Ensure the discriminate functions doesn't create new variables
-        scope.reuse_variables()  
+        scope.reuse_variables()
         probability_fake, logit_fake = discriminate(fake_images)
 
-        loss_discriminator, loss_generator = create_loss_functions(probability_real,
-                                                                   logit_real,	probability_fake, logit_fake)
+        loss_discriminator, loss_generator = create_loss_functions(probability_real, logit_real,
+                                                                   probability_fake, logit_fake)
         tf.identity(loss_discriminator, "loss_discriminator")
         tf.identity(loss_discriminator, "loss_generator")
 
