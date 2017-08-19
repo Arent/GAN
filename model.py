@@ -72,7 +72,7 @@ def activate_convolution_transposed(input_dim, output_dim,
 
 def activate_convolution(filter_width, filter_height, input_dim,
                          output_dim, strides, padding, input,
-                         x				activation, normalise=True):
+                         activation, normalise=True):
     assert len(input_dim) == 3
     assert len(output_dim) == 3
 

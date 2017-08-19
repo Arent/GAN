@@ -30,9 +30,6 @@ def rescale_and_save_image(image_array, iBatch):
 def initialise_graph_train(session):
     # Builds the graph, create data loading operations and initialises variables
     # Get que with training files
-    n_train_files, n_test_files\
-        , train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
-    batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
 
     build_graph()  # this creates all variables and operations needed to train
 
@@ -58,14 +55,16 @@ def initialise_graph_retrain(session):
     graph.clear_collection("queue_runners")
     graph.clear_collection("local_variables")
 
-    # Get que with training files
-    n_train_files, n_test_files\
-        , train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
-    batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
+
     # initialize the local variables, global variables have been restored
     sess.run(tf.local_variables_initializer())
 
     return graph
+
+# Get que with training files
+n_train_files, n_test_files\
+    , train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
+batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
 
 
 # Launch graph
