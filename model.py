@@ -228,8 +228,9 @@ def discriminate(image):
                 input=activated_layer_4_flattened,
                 input_dim=4 * 4 * 1024,
                 output_dim=[1],
-                normalize=True,
+                normalize=False,
                 activation=tf.nn.tanh)
+
     return judgement, logit_judgement
 
 
@@ -238,18 +239,21 @@ def create_loss_functions(probability_real, logit_real, probability_fake, logit_
     loss_discriminator_real = tf.reduce_mean(binary_cross_entropy(x=probability_real,
                                                                   label=tf.ones_like(probability_real)))
     loss_discriminator_fake = tf.reduce_mean(binary_cross_entropy(x=probability_fake,
-                                                                  label=tf.zeros_like(probability_real)))
+                                                                  label=tf.zeros_like(probability_fake)))
     loss_discriminator = loss_discriminator_real + loss_discriminator_fake
 
     loss_generator = tf.reduce_mean(binary_cross_entropy(x=probability_fake,
                                                          label=tf.ones_like(probability_fake)))
 
-    # summarize loss functions
-    tf.summary.scalar("discriminator_real",
+    # summarize loss functions and probalbilities
+    tf.summary.scalar("probability_real", tf.reduce_mean(probability_real))
+    tf.summary.scalar("probability_fake", tf.reduce_mean(probability_fake))
+
+    tf.summary.scalar("loss_discriminator_real",
                       tf.reduce_mean(loss_discriminator_real))
-    tf.summary.scalar("discriminator", loss_discriminator)
-    tf.summary.scalar("generator", loss_generator)
-    tf.summary.scalar("discriminator_fake",
+    tf.summary.scalar("loss_discriminator", loss_discriminator)
+    tf.summary.scalar("loss_generator", loss_generator)
+    tf.summary.scalar("loss_discriminator_fake",
                       tf.reduce_mean(loss_discriminator_fake))
 
     return loss_discriminator, loss_generator
@@ -310,7 +314,6 @@ def build_graph():
         # Ensure the discriminate functions doesn't create new variables
         scope.reuse_variables()
         probability_fake, logit_fake = discriminate(fake_images)
-
         loss_discriminator, loss_generator = create_loss_functions(probability_real, logit_real,
                                                                    probability_fake, logit_fake)
         tf.identity(loss_discriminator, "loss_discriminator")

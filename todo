@@ -1,0 +1,35 @@
+#What needs to happen
+
+------ Model quality ------
+- Currently the model predicts low probilities for both real and fake images.
+This doesn't make sense, 
+- Model has very low gradients for the generator, could be linked with wrong loss function 
+- Maybe batch size is to large
+
+
+
+------ Model speed --------
+- Check if GPU or CPU is the bottleneck Use tf and: nvidia-smi
+- Change order input
+- use fused_batch_norm (fused=True, data_format='NCHW')
+- check wether the input queue is optimal, maybe create tf.records
+
+- Check where the main computation and memory usage lies with:
+ run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+ run_metadata = tf.RunMetadata()
+ sess.run([generated_video, merged_summaries], options=run_options, run_metadata=run_metadata)
+
+                summary_writer.add_run_metadata(run_metadata, 'Epoch {}'.format(0))
+                summary_writer.add_summary(summ, 0)
+
+
+
+----- nice vim / terminal commands--- s
+
+:%s@\/Users\/Arent\/image_net@\/home\/ec2-user\/image-net@g
+
+:%s@ec2-user@ubuntu@f
+
+/home/ubuntu/image-net
+
+/Users/Arent/image_net 
