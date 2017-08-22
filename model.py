@@ -265,7 +265,7 @@ def create_training_operations():
 
     loss_discriminator = tf.get_default_graph()\
         .get_tensor_by_name("model/loss_discriminator:0")
-
+    print('loss discriminator =: ' + str(loss_discriminator))
     loss_generator = tf.get_default_graph()\
         .get_tensor_by_name("model/loss_generator:0")
 
