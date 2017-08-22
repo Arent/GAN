@@ -4,7 +4,7 @@ PATH_FOLDER = 'data/image_locations'
 LABEL_FOLDER = 'data/image_labels'
 model_folder = "saved_models/"
 sample_folder = 'samples/'
-model_identifier = "2017-Aug-13-13-16-23"
+model_identifier = "2017-Aug-19-15-00-48"
 model_name = "0.meta"
 
 
@@ -15,8 +15,8 @@ NUM_CHANNELS  = 3
 
 #parameters regarding training'
 TEST_SET_SIZE = 4
-BATCH_SIZE    = 16
-EPOCHS = 2
+BATCH_SIZE    = 64
+EPOCHS = 1
 NORMALISATION_DECAY = 0.9
 RELU_ALPHA = 1/6
 BETA_ADAM = 0.5

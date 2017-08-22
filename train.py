@@ -84,7 +84,7 @@ with tf.Session() as sess:
     images_tensor = graph.get_tensor_by_name('model/fake_images:0')
 
     # Create a saver object to check progress of training
-    saver = tf.train.Saver(max_to_keep=None)
+    saver = tf.train.Saver(max_to_keep=3)
     summary_writer = tf.summary.FileWriter(
         "".join(['tensorboard_logs', "/", run_identifier]), graph)
 
