@@ -316,6 +316,7 @@ def build_graph():
         probability_fake, logit_fake = discriminate(fake_images)
         loss_discriminator, loss_generator = create_loss_functions(probability_real, logit_real,
                                                                    probability_fake, logit_fake)
+        print(loss_discriminator)
         tf.identity(loss_discriminator, "loss_discriminator")
         tf.identity(loss_discriminator, "loss_generator")
 

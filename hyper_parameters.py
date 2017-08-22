@@ -15,7 +15,7 @@ NUM_CHANNELS  = 3
 
 #parameters regarding training'
 TEST_SET_SIZE = 4
-BATCH_SIZE    = 64
+BATCH_SIZE    = 16
 EPOCHS = 1
 NORMALISATION_DECAY = 0.9
 RELU_ALPHA = 1/6
