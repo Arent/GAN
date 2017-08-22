@@ -246,15 +246,14 @@ def create_loss_functions(probability_real, logit_real, probability_fake, logit_
                                                          label=tf.ones_like(probability_fake)))
 
     # summarize loss functions and probalbilities
-    tf.summary.scalar("probability_real", tf.reduce_mean(probability_real))
-    tf.summary.scalar("probability_fake", tf.reduce_mean(probability_fake))
 
-    tf.summary.scalar("loss_discriminator_real",
-                      tf.reduce_mean(loss_discriminator_real))
-    tf.summary.scalar("loss_discriminator", loss_discriminator)
-    tf.summary.scalar("loss_generator", loss_generator)
-    tf.summary.scalar("loss_discriminator_fake",
-                      tf.reduce_mean(loss_discriminator_fake))
+    with tf.variable_scope("loss") as scope:
+        tf.summary.scalar("loss_discriminator_real",
+                          tf.reduce_mean(loss_discriminator_real))
+        tf.summary.scalar("loss_discriminator", loss_discriminator)
+        tf.summary.scalar("loss_generator", loss_generator)
+        tf.summary.scalar("loss_discriminator_fake",
+                          tf.reduce_mean(loss_discriminator_fake))
 
     return loss_discriminator, loss_generator
 
@@ -265,7 +264,6 @@ def create_training_operations():
 
     loss_discriminator = tf.get_default_graph()\
         .get_tensor_by_name("model/loss_discriminator:0")
-    print('loss discriminator =: ' + str(loss_discriminator))
     loss_generator = tf.get_default_graph()\
         .get_tensor_by_name("model/loss_generator:0")
 
@@ -310,13 +308,16 @@ def build_graph():
         fake_images = generate(Z)
         tf.identity(fake_images, "fake_images")
         probability_real, logit_real = discriminate(real_images)
+        tf.summary.scalar("probability_real", tf.reduce_mean(probability_real))
 
         # Ensure the discriminate functions doesn't create new variables
         scope.reuse_variables()
         probability_fake, logit_fake = discriminate(fake_images)
+        tf.summary.scalar("probability_fake", tf.reduce_mean(probability_fake))
+
         loss_discriminator, loss_generator = create_loss_functions(probability_real, logit_real,
                                                                    probability_fake, logit_fake)
-        print(loss_discriminator)
+
         tf.identity(loss_discriminator, "loss_discriminator")
         tf.identity(loss_discriminator, "loss_generator")
 
