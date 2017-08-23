@@ -85,6 +85,9 @@ with tf.Session() as sess:
 
     # Create a saver object to check progress of training
     saver = tf.train.Saver(max_to_keep=3)
+    run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+    run_metadata = tf.RunMetadata()
+
     summary_writer = tf.summary.FileWriter(
         "".join(['tensorboard_logs', "/", run_identifier]), graph)
 
@@ -109,18 +112,18 @@ with tf.Session() as sess:
             # Get Z values and image batch
             z_batch = np.random.uniform(-1, 1,
                                         size=[BATCH_SIZE, Z_DIMENSION]).astype(np.float32)
-            image_batch = sess.run(train_image_batch)
+            image_batch = sess.run(train_image_batch, options=run_options)
 
             # Do the acual training
-            _,  = sess.run([train_op_gen], feed_dict={
+            _,  = sess.run([train_op_gen], options=run_options, feed_dict={
                            Z: z_batch, real_images: image_batch})
-            _,  = sess.run([train_op_discrim], feed_dict={
+            _,  = sess.run([train_op_discrim], options=run_options, feed_dict={
                            Z: z_batch, real_images: image_batch})
 
             # Add summaries of variables to tensorboard
-            merged_summary_op = tf.summary.merge_all()
-            summary_str = sess.run(merged_summary_op, feed_dict={
-                                   Z: z_batch, real_images: image_batch})
+            merged_summary_op = tf.summary.merge_all()    
+            summary_str = sess.run(merged_summary_op, options=run_options,
+                                feed_dict={Z: z_batch, real_images: image_batch})
             summary_writer.add_summary(summary_str, iBatch)
             if iBatch == 0:  # Save metagraph only once
                 saved_path = saver.save(
@@ -142,9 +145,11 @@ with tf.Session() as sess:
         # stop our queue threads and properly close the session
         print("This run can be identified as {}".format(run_identifier))
         print("Run the command line:\n"
-              "--> tensorboard --logdir=/tmp/tensorflow_logs "
+              "--> tensorboard --logdir=tensorboard_logs "
               "\nThen open http://0.0.0.0:6006/ into your web browser")
 
+         # Add meta data such as computational time per operation
+        summary_writer.add_run_metadata(run_metadata, 'Mysess')
         coord.request_stop()
         coord.join(threads)
         sess.close()
