@@ -9,7 +9,7 @@ This doesn't make sense,
 
 
 ------ Model speed --------
-- Check if GPU or CPU is the bottleneck Use tf and: nvidia-smi
+- (DATA LOADING IS BOTTLENECK) Check if GPU or CPU is the bottleneck Use tf and: nvidia-smi
 - Change order input
 - use fused_batch_norm (fused=True, data_format='NCHW')
 - check wether the input queue is optimal, maybe create tf.records
