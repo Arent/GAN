@@ -71,16 +71,23 @@ def get_batches():
 	test_image.set_shape([IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS])
 
 
+	min_after_dequeue = 100
+	capacity = min_after_dequeue + (NUM_THREADS + 3) * BATCH_SIZE
+
 	# collect batches of images before processing
-	train_image_batch, train_label_batch = tf.train.batch(
+	train_image_batch, train_label_batch = tf.train.shuffle_batch(
 										[train_image, train_label],
-										batch_size=BATCH_SIZE
-										,num_threads=1
+										batch_size=BATCH_SIZE,
+										num_threads=NUM_THREADS,
+										min_after_dequeue=min_after_dequeue,
+										capacity=capacity
 										)
-	test_image_batch, test_label_batch = tf.train.batch(
+	test_image_batch, test_label_batch = tf.train.shuffle_batch(
 										[test_image, test_label],
-										batch_size=BATCH_SIZE
-										,num_threads=1
+										batch_size=BATCH_SIZE,
+										num_threads=NUM_THREADS,
+										min_after_dequeue=min_after_dequeue,
+										capacity=capacity
 										)
 	return number_of_train_files, number_of_test_files, train_image_batch\
 	, train_label_batch, test_image_batch, test_label_batch

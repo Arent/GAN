@@ -6,12 +6,13 @@ model_folder = "saved_models/"
 sample_folder = 'samples/'
 model_identifier = "2017-Aug-19-15-00-48"
 model_name = "0.meta"
-
+NUM_THREADS = 4
 
 #parameters regarding data'
 IMAGE_HEIGHT  = 64
 IMAGE_WIDTH   = 64
 NUM_CHANNELS  = 3
+
 
 #parameters regarding training'
 TEST_SET_SIZE = 4
