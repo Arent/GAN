@@ -7,7 +7,9 @@ from model import *
 import datetime
 import os
 import math
+from tensorflow.examples.tutorials.mnist import input_data
 
+mnist = input_data.read_data_sets('/tmp/tensorflow/mnist/input_data', one_hot=True)
 run_identifier = '{:%Y-%b-%d-%H-%M-%S}'.format(datetime.datetime.now())
 
 
@@ -62,9 +64,10 @@ def initialise_graph_retrain(session):
     return graph
 
 # Get que with training files
-n_train_files, n_test_files\
-    , train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
-batches_per_epoch = int(math.ceil(float(n_train_files) / BATCH_SIZE))
+# n_train_files, n_test_files\
+#     , train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
+batches_per_epoch =  500 #int(math.ceil(float(n_train_files) / BATCH_SIZE))
+
 
 
 # Launch graph
@@ -96,60 +99,62 @@ with tf.Session() as sess:
     real_images = graph.get_tensor_by_name('real_images:0')
 
   # initialize the queue threads to start to shovel data
-    coord = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(coord=coord)
+    # coord = tf.train.Coordinator()
+    # threads = tf.train.start_queue_runners(coord=coord)
     iBatch = 0
-    try:
-        while not coord.should_stop():
-            print(iBatch)
+    for iBatch in range(batches_per_epoch):
+    # try:
+    #     while not coord.should_stop():
+        print(iBatch)
 
-            # retrieve and display epoch and batch
-            epoch = int(iBatch / batches_per_epoch) + 1
-            batch_number = iBatch % batches_per_epoch
-            print('Epoch: ' + str(epoch) + '/' + str(EPOCHS) + ' Batch: ' +
-                  str(batch_number) + '/' + str(batches_per_epoch - 1))
+        # retrieve and display epoch and batch
+        epoch = int(iBatch / batches_per_epoch) + 1
+        batch_number = iBatch % batches_per_epoch
+        print('Epoch: ' + str(epoch) + '/' + str(EPOCHS) + ' Batch: ' +
+              str(batch_number) + '/' + str(batches_per_epoch - 1))
 
-            # Get Z values and image batch
-            z_batch = np.random.uniform(-1, 1,
-                                        size=[BATCH_SIZE, Z_DIMENSION]).astype(np.float32)
-            image_batch = sess.run(train_image_batch, options=run_options)
+        # Get Z values and image batch
+        z_batch = np.random.uniform(-1, 1,
+                                    size=[BATCH_SIZE, Z_DIMENSION]).astype(np.float32)
+        image_batch = mnist.train.next_batch(BATCH_SIZE)[0]# sess.run(train_image_batch, options=run_options)
+        image_batch = image_batch.reshape([64,28,28,1])
+        image_batch = np.pad(image_batch, pad_width=((0, 0), (2, 2), (2, 2), (0,0)), mode='constant')
+        # Do the acual training
+        _,  = sess.run([train_op_gen], options=run_options, feed_dict={
+                       Z: z_batch, real_images: image_batch})
+        _,  = sess.run([train_op_discrim], options=run_options, feed_dict={
+                       Z: z_batch, real_images: image_batch})
 
-            # Do the acual training
-            _,  = sess.run([train_op_gen], options=run_options, feed_dict={
-                           Z: z_batch, real_images: image_batch})
-            _,  = sess.run([train_op_discrim], options=run_options, feed_dict={
-                           Z: z_batch, real_images: image_batch})
+        # Add summaries of variables to tensorboard
+        merged_summary_op = tf.summary.merge_all()    
+        summary_str = sess.run(merged_summary_op, options=run_options,
+                            feed_dict={Z: z_batch, real_images: image_batch})
+        summary_writer.add_summary(summary_str, iBatch)
+        if iBatch == 0:  # Save metagraph only once
+            saved_path = saver.save(
+                sess, save_location + str(batch_number), write_meta_graph=True)
 
-            # Add summaries of variables to tensorboard
-            merged_summary_op = tf.summary.merge_all()    
-            summary_str = sess.run(merged_summary_op, options=run_options,
-                                feed_dict={Z: z_batch, real_images: image_batch})
-            summary_writer.add_summary(summary_str, iBatch)
-            if iBatch == 0:  # Save metagraph only once
-                saved_path = saver.save(
-                    sess, save_location + str(batch_number), write_meta_graph=True)
+        if batch_number % 20 == 0:  # save variable state and make sample image
+            images = sess.run(images_tensor, feed_dict={Z: z_batch})
+            rescale_and_save_image(images[0, :, :, :], iBatch)
+            saved_path = saver.save(sess, save_location + "Epoch_" + str(
+                epoch) + "_Batch_" + str(batch_number), write_meta_graph=False)
+            print("Model saved in file: %s" % saved_path)
+        iBatch = iBatch + 1
 
-            if batch_number % 20 == 0:  # save variable state and make sample image
-                images = sess.run(images_tensor, feed_dict={Z: z_batch})
-                rescale_and_save_image(images[0, :, :, :], iBatch)
-                saved_path = saver.save(sess, save_location + "Epoch_" + str(
-                    epoch) + "_Batch_" + str(batch_number), write_meta_graph=False)
-                print("Model saved in file: %s" % saved_path)
-            iBatch = iBatch + 1
+    # except Exception, e:
+    #     # Report exceptions to the coordinator.
+    #     coord.request_stop(e)
 
-    except Exception, e:
-        # Report exceptions to the coordinator.
-        coord.request_stop(e)
+    # finally:
+    # stop our queue threads and properly close the session
+    print("This run can be identified as {}".format(run_identifier))
+    print("Run the command line:\n"
+          "--> tensorboard --logdir=tensorboard_logs "
+          "\nThen open http://0.0.0.0:6006/ into your web browser")
 
-    finally:
-        # stop our queue threads and properly close the session
-        print("This run can be identified as {}".format(run_identifier))
-        print("Run the command line:\n"
-              "--> tensorboard --logdir=tensorboard_logs "
-              "\nThen open http://0.0.0.0:6006/ into your web browser")
-
-         # Add meta data such as computational time per operation
-        summary_writer.add_run_metadata(run_metadata, 'Mysess')
-        coord.request_stop()
-        coord.join(threads)
-        sess.close()
+     # Add meta data such as computational time per operation
+    summary_writer.add_run_metadata(run_metadata, 'Mysess')
+    # coord.request_stop()
+    # coord.join(threads)
+    sess.close()

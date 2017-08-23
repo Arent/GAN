@@ -1,4 +1,5 @@
 #parameters that are actually just settings
+DEBUG = True
 run_type = 'train' # train or retrain
 PATH_FOLDER = 'data/image_locations'
 LABEL_FOLDER = 'data/image_labels'
@@ -9,14 +10,14 @@ model_name = "0.meta"
 NUM_THREADS = 4
 
 #parameters regarding data'
-IMAGE_HEIGHT  = 64
-IMAGE_WIDTH   = 64
-NUM_CHANNELS  = 3
+IMAGE_HEIGHT  = 32
+IMAGE_WIDTH   = 32
+NUM_CHANNELS  = 1
 
 
 #parameters regarding training'
 TEST_SET_SIZE = 4
-BATCH_SIZE    = 16
+BATCH_SIZE    = 64
 EPOCHS = 1
 NORMALISATION_DECAY = 0.9
 RELU_ALPHA = 1/6
