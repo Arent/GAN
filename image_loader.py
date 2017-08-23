@@ -18,8 +18,9 @@ def image_locations_and_labels_from_files(image_locations_filename, image_labels
 
 def get_batches():
 	all_filepaths, all_labels = image_locations_and_labels_from_files(PATH_FOLDER,LABEL_FOLDER)
-	all_filepaths = all_filepaths[0:32] #DEBUG
-	all_labels = all_labels[0:32] #DEBUG
+	if DEBUG:
+		all_filepaths = all_filepaths[0:63]#DEBUG
+		all_labels = all_labels[0:63] #DEBUG
 
 
 	# convert string into tensors
