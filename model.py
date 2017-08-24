@@ -259,7 +259,7 @@ def create_loss_functions(probability_real, logit_real, probability_fake, logit_
                                                                   label=tf.zeros_like(probability_fake)))
     loss_discriminator = loss_discriminator_real + loss_discriminator_fake
 
-    loss_generator =  -tf.reduce_mean(binary_cross_entropy(x=probability_fake,
+    loss_generator =  tf.reduce_mean(binary_cross_entropy(x=probability_fake,
                                                          label=tf.ones_like(probability_fake)))
 
     # summarize loss functions and probalbilities
@@ -268,7 +268,7 @@ def create_loss_functions(probability_real, logit_real, probability_fake, logit_
         tf.summary.scalar("loss_discriminator_real",
                           tf.reduce_mean(loss_discriminator_real))
         tf.summary.scalar("loss_discriminator", loss_discriminator)
-        tf.summary.scalar("loss_generator", loss_generator)
+        # tf.summary.scalar("loss_generator", loss_generator)
         tf.summary.scalar("loss_discriminator_fake",
                           tf.reduce_mean(loss_discriminator_fake))
 
@@ -306,9 +306,12 @@ def create_training_operations():
     # Create and identiy the training operations
     train_op_discrim = optimizer.apply_gradients(grads_and_vars=discriminator_gradients,
                                                  name='train_operation_discriminator')
-    train_op_gen = optimizer.apply_gradients(grads_and_vars=generator_gradients,
-                                             name='train_operation_generator')
+    # train_op_gen = optimizer.apply_gradients(grads_and_vars=generator_gradients,
+       
+    #                                          name='train_operation_generator')
 
+
+    train_op_gen = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE, beta1=BETA_ADAM).minimize(loss_generator, var_list=generator_variables, name="train_operation_generator")
     # Merge all tensorboard summaries, identidy the merged operations
     merged_summary_op = tf.summary.merge_all()
     tf.identity(merged_summary_op, name="merged_summaries")
@@ -334,9 +337,12 @@ def build_graph():
         probability_fake, logit_fake = discriminate(fake_images)
         tf.summary.scalar("probability_fake", tf.reduce_mean(probability_fake))
 
-        loss_discriminator, loss_generator = create_loss_functions(probability_real, logit_real,
+        loss_discriminator, _ = create_loss_functions(probability_real, logit_real,
                                                                    probability_fake, logit_fake)
 
+
+        loss_generator = tf.nn.l2_loss(real_images - fake_images)
+        tf.summary.scalar("loss2_generator", loss_generator)
         tf.identity(loss_discriminator, "loss_discriminator")
         tf.identity(loss_discriminator, "loss_generator")
 
