@@ -4,13 +4,13 @@ from hyper_parameters import *
 
 def variable_summaries(var):
     """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
-    mean = tf.reduce_mean(var)
-    tf.summary.scalar('mean', mean)
-    with tf.name_scope('stddev'):
-        stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
-    tf.summary.scalar('stddev', stddev)
-    tf.summary.scalar('max', tf.reduce_max(var))
-    tf.summary.scalar('min', tf.reduce_min(var))
+    # mean = tf.reduce_mean(var)
+    # tf.summary.scalar('mean', mean)
+    # with tf.name_scope('stddev'):
+    #     stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+    # tf.summary.scalar('stddev', stddev)
+    # tf.summary.scalar('max', tf.reduce_max(var))
+    # tf.summary.scalar('min', tf.reduce_min(var))
     tf.summary.histogram('histogram', var)
 
 
@@ -59,12 +59,17 @@ def activate_convolution_transposed(input_dim, output_dim,
                                                    decay=NORMALISATION_DECAY)
 
     activated_output_bias = activation(output_bias)
-
-    with tf.variable_scope("Activated_output_bias"):
+    with tf.variable_scope("input"):
+        variable_summaries(input)
+    with tf.variable_scope("bias"):
+        variable_summaries(bias)
+    with tf.variable_scope("output_wo_bias"):
+        variable_summaries(output)
+    with tf.variable_scope("activated_output"):
         variable_summaries(activated_output_bias)
-    with tf.variable_scope("Output_bias"):
+    with tf.variable_scope("unactivated_Output"):
         variable_summaries(output_bias)
-    with tf.variable_scope("Weights"):
+    with tf.variable_scope("weights"):
         variable_summaries(filter_weights)
 
     return activated_output_bias
@@ -96,11 +101,17 @@ def activate_convolution(filter_width, filter_height, input_dim,
                                                    decay=NORMALISATION_DECAY)
     activated_output_bias = activation(output_bias)
 
-    with tf.variable_scope("Activated_output_bias"):
+    with tf.variable_scope("input"):
+        variable_summaries(input)
+    with tf.variable_scope("bias"):
+        variable_summaries(bias)
+    with tf.variable_scope("output_wo_bias"):
+        variable_summaries(output)
+    with tf.variable_scope("activated_output"):
         variable_summaries(activated_output_bias)
-    with tf.variable_scope("Output_bias"):
+    with tf.variable_scope("unactivated_Output"):
         variable_summaries(output_bias)
-    with tf.variable_scope("Weights"):
+    with tf.variable_scope("weights"):
         variable_summaries(filter)
     return activated_output_bias
 
@@ -123,11 +134,17 @@ def activate_fully_connected(input, input_dim, output_dim, activation, normalize
 
     output_bias_logit = output_bias
     activated_output_bias = activation(output_bias)
-    with tf.variable_scope("Activated_output_bias"):
+    with tf.variable_scope("input"):
+        variable_summaries(input)
+    with tf.variable_scope("bias"):
+        variable_summaries(bias)
+    with tf.variable_scope("output_wo_bias"):
+        variable_summaries(output)
+    with tf.variable_scope("activated_output"):
         variable_summaries(activated_output_bias)
-    with tf.variable_scope("Output_bias"):
+    with tf.variable_scope("unactivated_Output"):
         variable_summaries(output_bias)
-    with tf.variable_scope("Weights"):
+    with tf.variable_scope("weights"):
         variable_summaries(weights)
 
     return activated_output_bias, output_bias_logit
@@ -242,7 +259,7 @@ def create_loss_functions(probability_real, logit_real, probability_fake, logit_
                                                                   label=tf.zeros_like(probability_fake)))
     loss_discriminator = loss_discriminator_real + loss_discriminator_fake
 
-    loss_generator = tf.reduce_mean(binary_cross_entropy(x=probability_fake,
+    loss_generator =  -tf.reduce_mean(binary_cross_entropy(x=probability_fake,
                                                          label=tf.ones_like(probability_fake)))
 
     # summarize loss functions and probalbilities

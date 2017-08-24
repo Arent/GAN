@@ -69,7 +69,7 @@ def initialise_graph_retrain(session):
 # Get que with training files
 # n_train_files, n_test_files\
 #     , train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
-batches_per_epoch =  3 #int(math.ceil(float(n_train_files) / BATCH_SIZE))
+batches_per_epoch =  5 #int(math.ceil(float(n_train_files) / BATCH_SIZE))
 
 
 
