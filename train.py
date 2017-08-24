@@ -22,8 +22,11 @@ save_location = create_save_location()
 
 
 def rescale_and_save_image(image_array, iBatch):
+    if image_array.shape[2] == 1:
+        image_array = np.repeat(image_array, 3, axis=2)    
     image_array = np.uint8((image_array + 1) *
                            127.5)  # rescale and make into integer\
+
     image = Image.fromarray(image_array)
     image.save("".join([model_folder, run_identifier,
                         "/", sample_folder, str(iBatch), ".jpeg"]))
@@ -66,7 +69,7 @@ def initialise_graph_retrain(session):
 # Get que with training files
 # n_train_files, n_test_files\
 #     , train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
-batches_per_epoch =  500 #int(math.ceil(float(n_train_files) / BATCH_SIZE))
+batches_per_epoch =  3 #int(math.ceil(float(n_train_files) / BATCH_SIZE))
 
 
 
@@ -117,7 +120,8 @@ with tf.Session() as sess:
         z_batch = np.random.uniform(-1, 1,
                                     size=[BATCH_SIZE, Z_DIMENSION]).astype(np.float32)
         image_batch = mnist.train.next_batch(BATCH_SIZE)[0]# sess.run(train_image_batch, options=run_options)
-        image_batch = image_batch.reshape([64,28,28,1])
+        image_batch = image_batch.reshape([BATCH_SIZE,28,28,1])
+        rescale_and_save_image(image_batch[np.random.randint(low=0,high=BATCH_SIZE), :, :, :], 'feeddict' + str(iBatch) )
         image_batch = np.pad(image_batch, pad_width=((0, 0), (2, 2), (2, 2), (0,0)), mode='constant')
         # Do the acual training
         _,  = sess.run([train_op_gen], options=run_options, feed_dict={
@@ -134,7 +138,7 @@ with tf.Session() as sess:
             saved_path = saver.save(
                 sess, save_location + str(batch_number), write_meta_graph=True)
 
-        if batch_number % 20 == 0:  # save variable state and make sample image
+        if batch_number % 1 == 0:  # save variable state and make sample image
             images = sess.run(images_tensor, feed_dict={Z: z_batch})
             rescale_and_save_image(images[0, :, :, :], iBatch)
             saved_path = saver.save(sess, save_location + "Epoch_" + str(

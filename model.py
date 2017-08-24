@@ -20,7 +20,7 @@ def leaky_RELU(x):
 
 # init_weight_variable generates a weight variable of a given shape.
 def init_weight_variable(shape):
-    return tf.random_normal(shape, stddev=0.01)
+    return tf.random_normal(shape, stddev=0.02)
 
 
 def binary_cross_entropy(x, label):
@@ -167,7 +167,7 @@ def generate(z):
                 input_dim=[16, 16, 256], output_dim=[32, 32, 1],
                 strides=[1, 2, 2, 1], padding='SAME',
                 input=activated_layer_3,
-                activation=tf.nn.tanh,
+                activation=tf.nn.sigmoid,
                 normalise=False)
 
         # with tf.variable_scope("layer5"):
@@ -303,10 +303,12 @@ def build_graph():
                                   shape=(None, IMAGE_HEIGHT,
                                          IMAGE_WIDTH, NUM_CHANNELS),
                                   name='real_images')
+    tf.summary.histogram('real_images', real_images)
 
     with tf.variable_scope("model") as scope:
         fake_images = generate(Z)
         tf.identity(fake_images, "fake_images")
+        tf.summary.histogram('fake_images', fake_images)
         probability_real, logit_real = discriminate(real_images)
         tf.summary.scalar("probability_real", tf.reduce_mean(probability_real))
 
