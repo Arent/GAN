@@ -161,7 +161,7 @@ def generate(z):
                 strides=[1, 1, 1, 1], padding='VALID',
                 input=z,
                 activation=tf.nn.relu,
-                normalise=True)
+                normalise=False)
 
         with tf.variable_scope("layer2"):
             activated_layer_2 = activate_convolution_transposed(
@@ -169,7 +169,7 @@ def generate(z):
                 strides=[1, 2, 2, 1], padding='SAME',
                 input=activated_layer_1,
                 activation=tf.nn.relu,
-                normalise=True)
+                normalise=False)
 
         with tf.variable_scope("layer3"):
             activated_layer_3 = activate_convolution_transposed(
@@ -177,7 +177,7 @@ def generate(z):
                 strides=[1, 2, 2, 1], padding='SAME',
                 input=activated_layer_2,
                 activation=tf.nn.relu,
-                normalise=True)
+                normalise=False)
 
         with tf.variable_scope("layer4"):
             activated_layer_4 = activate_convolution_transposed(
@@ -207,8 +207,8 @@ def discriminate(image):
                 input_dim=[32, 32, 1], output_dim=[16, 16, 128],
                 strides=[1, 2, 2, 1], padding='SAME',
                 input=image,
-                activation=leaky_RELU,
-                normalise=True)
+                activation=tf.nn.relu,
+                normalise=False)
 
         with tf.variable_scope("layer2"):
             activated_layer_2 = activate_convolution(
@@ -216,8 +216,8 @@ def discriminate(image):
                 input_dim=[16, 16, 128], output_dim=[8, 8, 256],
                 strides=[1, 2, 2, 1], padding='SAME',
                 input=activated_layer_1,
-                activation=leaky_RELU,
-                normalise=True)
+                activation=tf.nn.relu,
+                normalise=False)
 
         with tf.variable_scope("layer3"):
             activated_layer_3 = activate_convolution(
@@ -225,8 +225,8 @@ def discriminate(image):
                 input_dim=[8, 8, 256], output_dim=[4, 4, 512],
                 strides=[1, 2, 2, 1], padding='SAME',
                 input=activated_layer_2,
-                activation=leaky_RELU,
-                normalise=True)
+                activation=tf.nn.relu,
+                normalise=False)
 
         with tf.variable_scope("layer4"):
             activated_layer_4 = activate_convolution(
@@ -234,8 +234,8 @@ def discriminate(image):
                 input_dim=[4, 4, 512], output_dim=[2, 2, 1024],
                 strides=[1, 2, 2, 1], padding='SAME',
                 input=activated_layer_3,
-                activation=leaky_RELU,
-                normalise=True)
+                activation=tf.nn.relu,
+                normalise=False)
 
         with tf.variable_scope("layer5"):
             total_dimension = tf.reduce_prod(tf.shape(activated_layer_4)[1:])

@@ -9,7 +9,7 @@ import os
 import math
 from tensorflow.examples.tutorials.mnist import input_data
 
-mnist = input_data.read_data_sets('/tmp/tensorflow/mnist/input_data', one_hot=True)
+mnist = input_data.read_data_sets('/tmp/tensorflow/mnist/input_data', one_hot=False)
 run_identifier = '{:%Y-%b-%d-%H-%M-%S}'.format(datetime.datetime.now())
 
 
@@ -69,7 +69,7 @@ def initialise_graph_retrain(session):
 # Get que with training files
 # n_train_files, n_test_files\
 #     , train_image_batch, train_label_batch, test_image_batch, test_label_batch = get_batches()
-batches_per_epoch =  5 #int(math.ceil(float(n_train_files) / BATCH_SIZE))
+batches_per_epoch =  15 #int(math.ceil(float(n_train_files) / BATCH_SIZE))
 
 
 
@@ -119,7 +119,10 @@ with tf.Session() as sess:
         # Get Z values and image batch
         z_batch = np.random.uniform(-1, 1,
                                     size=[BATCH_SIZE, Z_DIMENSION]).astype(np.float32)
-        image_batch = mnist.train.next_batch(BATCH_SIZE)[0]# sess.run(train_image_batch, options=run_options)
+        # sess.run(train_image_batch, options=run_options)
+        image_batch, image_labels = mnist.train.next_batch(BATCH_SIZE*25)
+        image_batch =  image_batch[image_labels==1][0:BATCH_SIZE]
+
         image_batch = image_batch.reshape([BATCH_SIZE,28,28,1])
         rescale_and_save_image(image_batch[np.random.randint(low=0,high=BATCH_SIZE), :, :, :], 'feeddict' + str(iBatch) )
         image_batch = np.pad(image_batch, pad_width=((0, 0), (2, 2), (2, 2), (0,0)), mode='constant')
